@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Materiales - Sistema Móvil</title>
+    
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    
+    <!-- Firebase SDK (compatibilidad con v8) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    <style>
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .slide-up {
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        
+        .material-card {
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+        }
+        
+        .material-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .status-green {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .status-red {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        
+        .status-neutral {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        }
+        
+        .floating-action {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        @media print {
+            .no-print { display: none !important; }
+            .floating-action { display: none !important; }
+            body { background: white !important; }
+        }
+        
+        .modal {
+            backdrop-filter: blur(8px);
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .dark .glass-effect {
+            background: rgba(31, 41, 55, 0.95);
+            border: 1px solid rgba(75, 85, 99, 0.2);
+        }
+        
+        .dark {
+            background: #1f2937;
+            color: #f9fafb;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen transition-colors duration-300">
+
+    <!-- Header -->
+    <header class="bg-white shadow-lg sticky top-0 z-50 dark:bg-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <i class="fas fa-boxes text-blue-600 text-2xl mr-3"></i>
+                    <h1 class="text-xl font-bold text-gray-900 dark:text-white">Control de Materiales</h1>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="toggleDarkMode()" class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors">
+                        <i class="fas fa-moon dark:fa-sun text-gray-600 dark:text-gray-300"></i>
+                    </button>
+                    <button onclick="showReportsModal()" class="p-2 rounded-lg bg-green-100 hover:bg-green-200 text-green-600 transition-colors">
+                        <i class="fas fa-chart-bar"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Stats Dashboard -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 dark:bg-blue-900">
+                        <i class="fas fa-boxes text-blue-600 dark:text-blue-400"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Materiales</p>
+                        <p class="text-2xl font-semibold text-gray-900 dark:text-white" id="totalMaterials">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 dark:bg-green-900">
+                        <i class="fas fa-check-circle text-green-600 dark:text-green-400"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">En Stock</p>
+                        <p class="text-2xl font-semibold text-gray-900 dark:text-white" id="inStock">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-red-100 dark:bg-red-900">
+                        <i class="fas fa-exclamation-triangle text-red-600 dark:text-red-400"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Bajo Stock</p>
+                        <p class="text-2xl font-semibold text-gray-900 dark:text-white" id="lowStock">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100 dark:bg-purple-900">
+                        <i class="fas fa-calendar text-purple-600 dark:text-purple-400"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Esta Semana</p>
+                        <p class="text-2xl font-semibold text-gray-900 dark:text-white" id="thisWeek">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
+            <div class="flex flex-col sm:flex-row gap-4">
+                <div class="flex-1">
+                    <input 
+                        type="text" 
+                        id="searchInput"
+                        placeholder="Buscar por material, nombre o guía..."
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        oninput="filterMaterials()"
+                    >
+                </div>
+                <div class="flex gap-2">
+                    <select id="statusFilter" onchange="filterMaterials()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        <option value="">Todos los estados</option>
+                        <option value="green">En stock</option>
+                        <option value="red">Bajo stock</option>
+                    </select>
+                    <button onclick="clearFilters()" class="px-4 py-2 bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Materials Grid -->
+        <div id="materialsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Materials will be loaded here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden text-center py-12">
+            <i class="fas fa-box-open text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">No hay materiales registrados</h3>
+            <p class="text-gray-500 dark:text-gray-500 mb-6">Comienza agregando tu primer material</p>
+            <button onclick="showAddModal()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                <i class="fas fa-plus mr-2"></i>Agregar Material
+            </button>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div class="floating-action no-print">
+        <button onclick="showAddModal()" class="w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center">
+            <i class="fas fa-plus text-xl"></i>
+        </button>
+    </div>
+
+    <!-- Add/Edit Material Modal -->
+    <div id="materialModal" class="hidden fixed inset-0 bg-black bg-opacity-50 modal z-50 flex items-center justify-center p-4">
+        <div class="glass-effect rounded-xl max-w-md w-full max-h-screen overflow-y-auto slide-up">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 id="modalTitle" class="text-xl font-semibold text-gray-900 dark:text-white">Agregar Material</h3>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <form id="materialForm" onsubmit="saveMaterial(event)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Material*</label>
+                            <input type="text" id="material" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre*</label>
+                            <input type="text" id="nombre" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha*</label>
+                            <input type="date" id="fecha" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Guía*</label>
+                            <input type="text" id="guia" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Entrega*</label>
+                            <input type="number" id="entrega" required min="0" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Total Consumo*</label>
+                            <input type="number" id="totalConsumo" required min="0" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Formulario</label>
+                            <input type="text" id="formu" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-3 mt-6">
+                        <button type="button" onclick="closeModal()" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-save mr-2"></i>Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Modal -->
+    <div id="reportsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 modal z-50 flex items-center justify-center p-4">
+        <div class="glass-effect rounded-xl max-w-lg w-full max-h-screen overflow-y-auto slide-up">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Reportes y Exportaciones</h3>
+                    <button onclick="closeReportsModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 dark:text-white mb-3">Reporte por Fechas</h4>
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <div>
+                                <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Desde</label>
+                                <input type="date" id="reportFromDate" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Hasta</label>
+                                <input type="date" id="reportToDate" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                            </div>
+                        </div>
+                        <button onclick="generateDateReport()" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                            <i class="fas fa-file-pdf mr-2"></i>Generar PDF por Fechas
+                        </button>
+                    </div>
+                    
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 dark:text-white mb-3">Exportaciones Completas</h4>
+                        <div class="space-y-2">
+                            <button onclick="exportToCSV()" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                                <i class="fas fa-file-csv mr-2"></i>Exportar a CSV
+                            </button>
+                            <button onclick="generateFullPDFReport()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-file-pdf mr-2"></i>Reporte PDF Completo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast" class="hidden fixed top-4 right-4 z-50 no-print">
+        <div class="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg fade-in">
+            <div class="flex items-center">
+                <i class="fas fa-check-circle mr-2"></i>
+                <span id="toastMessage">Operación exitosa</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+      // 🔥 CONFIGURACIÓN DE FIREBASE (¡Reemplaza con tus datos!)
+      const firebaseConfig = {
+        apiKey: "AIzaSyCQD8cR0CDAEXKvcQLHFocUVjMDLsTfvP0",
+        authDomain: "control-de-materiales-aa944.firebaseapp.com",
+        projectId: "control-de-materiales-aa944",
+        storageBucket: "control-de-materiales-aa944.appspot.com",
+        messagingSenderId: "351278560249",
+        appId: "1:351278560249:web:cb480b35a1919fa1ca0328"
+      };
+
+      // Inicializar Firebase
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+      const materialsCollection = db.collection('materials');
+
+      // Variables globales
+      let materials = [];
+      let editingMaterial = null;
+      let darkMode = localStorage.getItem('darkMode') === 'true';
+
+      // Inicializar app
+      document.addEventListener('DOMContentLoaded', function() {
+        loadMaterials();
+        updateStats();
+        renderMaterials();
+
+        // Fecha por defecto: hoy
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('reportToDate').value = today;
+        const monthAgo = new Date();
+        monthAgo.setDate(monthAgo.getDate() - 30);
+        document.getElementById('reportFromDate').value = monthAgo.toISOString().split('T')[0];
+
+        if (darkMode) document.body.classList.add('dark');
+      });
+
+      // Alternar modo oscuro
+      function toggleDarkMode() {
+        darkMode = !darkMode;
+        document.body.classList.toggle('dark');
+        localStorage.setItem('darkMode', darkMode);
+      }
+
+      // Cargar materiales desde Firestore
+      function loadMaterials() {
+        materialsCollection.onSnapshot(snapshot => {
+          materials = [];
+          snapshot.forEach(doc => {
+            materials.push({ id: doc.id, ...doc.data() });
+          });
+          updateStats();
+          renderMaterials();
+        }, error => {
+          console.error("Error al cargar materiales: ", error);
+          showToast("Error al conectar con la base de datos");
+        });
+      }
+
+      // Obtener estado (color)
+      function getStatusColor(entrega, totalConsumo) {
+        return entrega >= totalConsumo ? 'green' : 'red';
+      }
+
+      // Actualizar estadísticas
+      function updateStats() {
+        const total = materials.length;
+        const inStock = materials.filter(m => m.entrega >= m.totalConsumo).length;
+        const lowStock = materials.filter(m => m.entrega < m.totalConsumo).length;
+
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        const thisWeek = materials.filter(m => new Date(m.fecha) >= weekAgo).length;
+
+        document.getElementById('totalMaterials').textContent = total;
+        document.getElementById('inStock').textContent = inStock;
+        document.getElementById('lowStock').textContent = lowStock;
+        document.getElementById('thisWeek').textContent = thisWeek;
+      }
+
+      // Renderizar materiales
+      function renderMaterials(filteredMaterials = null) {
+        const materialsToRender = filteredMaterials || materials;
+        const grid = document.getElementById('materialsGrid');
+        const emptyState = document.getElementById('emptyState');
+
+        if (materialsToRender.length === 0) {
+          grid.innerHTML = '';
+          emptyState.classList.remove('hidden');
+          return;
+        }
+
+        emptyState.classList.add('hidden');
+        grid.innerHTML = materialsToRender.map(material => {
+          const statusColor = getStatusColor(material.entrega, material.totalConsumo);
+          const statusClass = `status-${statusColor}`;
+          const difference = material.entrega - material.totalConsumo;
+
+          return `
+            <div class="material-card bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+              <div class="${statusClass} p-4 text-white">
+                <div class="flex justify-between items-start mb-2">
+                  <h3 class="font-bold text-lg">${material.material}</h3>
+                  <div class="flex space-x-2">
+                    <button onclick="editMaterial('${material.id}')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded">
+                      <i class="fas fa-edit text-sm"></i>
+                    </button>
+                    <button onclick="deleteMaterial('${material.id}')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded">
+                      <i class="fas fa-trash text-sm"></i>
+                    </button>
+                  </div>
+                </div>
+                <p class="text-white text-opacity-90 truncate">${material.nombre}</p>
+                <div class="flex justify-between items-center mt-3">
+                  <span class="text-sm">Stock: ${difference >= 0 ? '+' : ''}${difference}</span>
+                  <span class="text-sm">${new Date(material.fecha).toLocaleDateString()}</span>
+                </div>
+              </div>
+              <div class="p-4">
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                  <div><span class="text-gray-500 dark:text-gray-400">Guía:</span><p class="font-medium">${material.guia}</p></div>
+                  <div><span class="text-gray-500 dark:text-gray-400">Entrega:</span><p class="font-medium">${material.entrega}</p></div>
+                  <div><span class="text-gray-500 dark:text-gray-400">Consumo:</span><p class="font-medium">${material.totalConsumo}</p></div>
+                  <div><span class="text-gray-500 dark:text-gray-400">Formulario:</span><p class="font-medium">${material.formu || 'N/A'}</p></div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Filtros
+      function filterMaterials() {
+        const term = document.getElementById('searchInput').value.toLowerCase();
+        const status = document.getElementById('statusFilter').value;
+
+        let filtered = materials.filter(m => {
+          const matchesSearch = m.material.toLowerCase().includes(term) ||
+                                m.nombre.toLowerCase().includes(term) ||
+                                m.guia.toLowerCase().includes(term);
+          if (status) return matchesSearch && getStatusColor(m.entrega, m.totalConsumo) === status;
+          return matchesSearch;
+        });
+
+        renderMaterials(filtered);
+      }
+
+      function clearFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('statusFilter').value = '';
+        renderMaterials();
+      }
+
+      // Modal agregar/editar
+      function showAddModal() {
+        editingMaterial = null;
+        document.getElementById('modalTitle').textContent = 'Agregar Material';
+        document.getElementById('materialForm').reset();
+        document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+        document.getElementById('materialModal').classList.remove('hidden');
+      }
+
+      function editMaterial(id) {
+        const material = materials.find(m => m.id === id);
+        if (!material) return;
+
+        editingMaterial = material;
+        document.getElementById('modalTitle').textContent = 'Editar Material';
+        Object.keys(material).forEach(key => {
+          const el = document.getElementById(key);
+          if (el) el.value = material[key];
+        });
+        document.getElementById('materialModal').classList.remove('hidden');
+      }
+
+      // Guardar en Firestore
+      function saveMaterial(e) {
+        e.preventDefault();
+
+        const data = {
+          material: document.getElementById('material').value,
+          nombre: document.getElementById('nombre').value,
+          fecha: document.getElementById('fecha').value,
+          guia: document.getElementById('guia').value,
+          entrega: parseInt(document.getElementById('entrega').value),
+          totalConsumo: parseInt(document.getElementById('totalConsumo').value),
+          formu: document.getElementById('formu').value || ''
+        };
+
+        if (editingMaterial) {
+          materialsCollection.doc(editingMaterial.id).update(data)
+            .then(() => {
+              closeModal();
+              showToast('Material actualizado');
+            })
+            .catch(() => showToast('Error al actualizar'));
+        } else {
+          materialsCollection.add(data)
+            .then(() => {
+              closeModal();
+              showToast('Material agregado');
+            })
+            .catch(() => showToast('Error al guardar'));
+        }
+      }
+
+      // Eliminar
+      function deleteMaterial(id) {
+        if (confirm('¿Eliminar este material?')) {
+          materialsCollection.doc(id).delete()
+            .then(() => showToast('Eliminado'))
+            .catch(() => showToast('Error al eliminar'));
+        }
+      }
+
+      // Cerrar modales
+      function closeModal() {
+        document.getElementById('materialModal').classList.add('hidden');
+        editingMaterial = null;
+      }
+
+      function closeReportsModal() {
+        document.getElementById('reportsModal').classList.add('hidden');
+      }
+
+      // Reportes
+      function showReportsModal() {
+        document.getElementById('reportsModal').classList.remove('hidden');
+      }
+
+      function generateDateReport() {
+        const from = document.getElementById('reportFromDate').value;
+        const to = document.getElementById('reportToDate').value;
+        if (!from || !to) return alert('Selecciona ambas fechas');
+
+        const filtered = materials.filter(m => m.fecha >= from && m.fecha <= to);
+        generatePDFReport(filtered, `Reporte de ${from} a ${to}`);
+      }
+
+      function generateFullPDFReport() {
+        generatePDFReport(materials, 'Reporte Completo');
+      }
+
+      function generatePDFReport(data, title) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.setFontSize(18);
+        doc.text(title, 20, 20);
+        doc.setFontSize(12);
+        doc.text(`Generado: ${new Date().toLocaleDateString()}`, 20, 30);
+        doc.text(`Total: ${data.length}`, 20, 40);
+
+        let y = 60;
+        const headers = ['Material', 'Nombre', 'Fecha', 'Guía', 'Entrega', 'Consumo', 'Stock'];
+        const cols = [25, 35, 25, 20, 20, 20, 20];
+        let x = 20;
+
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'bold');
+        headers.forEach((h, i) => { doc.text(h, x, y); x += cols[i]; });
+        y += 10;
+        doc.line(20, y - 5, 185, y - 5);
+
+        doc.setFont(undefined, 'normal');
+        data.forEach(m => {
+          if (y > 280) { doc.addPage(); y = 20; }
+          x = 20;
+          const stock = m.entrega - m.totalConsumo;
+          [m.material, m.nombre, m.fecha, m.guia, m.entrega, m.totalConsumo, stock].forEach((v, i) => {
+            doc.text(v.toString(), x, y);
+            x += cols[i];
+          });
+          y += 8;
+        });
+
+        doc.save(`${title.replace(/\s+/g, '_')}.pdf`);
+        showToast('PDF generado');
+      }
+
+      // Exportar CSV
+      function exportToCSV() {
+        const csv = [
+          ['Material', 'Nombre', 'Fecha', 'Guía', 'Entrega', 'TotalConsumo', 'Formulario'].join(','),
+          ...materials.map(m => [
+            m.material,
+            `"${m.nombre}"`,
+            m.fecha,
+            m.guia,
+            m.entrega,
+            m.totalConsumo,
+            m.formu || ''
+          ].join(','))
+        ].join('\n');
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `materiales_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('CSV exportado');
+      }
+
+      // Toast
+      function showToast(msg) {
+        document.getElementById('toastMessage').textContent = msg;
+        const toast = document.getElementById('toast');
+        toast.classList.remove('hidden');
+        setTimeout(() => toast.classList.add('hidden'), 3000);
+      }
+
+      // Cerrar modales con clic fuera
+      document.addEventListener('click', e => {
+        if (e.target.id === 'materialModal') closeModal();
+        if (e.target.id === 'reportsModal') closeReportsModal();
+      });
+
+      // Atajos de teclado
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { closeModal(); closeReportsModal(); }
+        if (e.ctrlKey && e.key === 'k') { e.preventDefault(); document.getElementById('searchInput').focus(); }
+        if (e.ctrlKey && e.key === 'n') { e.preventDefault(); showAddModal(); }
+      });
+    </script>
+</body>
+</html>
