@@ -3,659 +3,1240 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Materiales - Sistema Móvil</title>
-    
-    <!-- Tailwind CSS -->
+    <title>ThunderNet - Control de Materiales</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    
-    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    
-    <!-- jsPDF for PDF generation -->
-    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-    
-    <!-- Firebase SDK (compatibilidad con v8) -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
-    <style>
-        .fade-in {
-            animation: fadeIn 0.3s ease-in;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .slide-up {
-            animation: slideUp 0.3s ease-out;
-        }
-        
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-        }
-        
-        .material-card {
-            transition: all 0.3s ease;
-            touch-action: manipulation;
-        }
-        
-        .material-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-        
-        .status-green {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        }
-        
-        .status-red {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-        }
-        
-        .status-neutral {
-            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
-        }
-        
-        .floating-action {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1000;
-        }
-        
-        @media print {
-            .no-print { display: none !important; }
-            .floating-action { display: none !important; }
-            body { background: white !important; }
-        }
-        
-        .modal {
-            backdrop-filter: blur(8px);
-        }
-        
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .dark .glass-effect {
-            background: rgba(31, 41, 55, 0.95);
-            border: 1px solid rgba(75, 85, 99, 0.2);
-        }
-        
-        .dark {
-            background: #1f2937;
-            color: #f9fafb;
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
-<body class="bg-gray-50 min-h-screen transition-colors duration-300">
-
+<body class="bg-gray-50 min-h-screen">
     <!-- Header -->
-    <header class="bg-white shadow-lg sticky top-0 z-50 dark:bg-gray-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-4">
-                <div class="flex items-center">
-                    <i class="fas fa-boxes text-blue-600 text-2xl mr-3"></i>
-                    <h1 class="text-xl font-bold text-gray-900 dark:text-white">Control de Materiales</h1>
-                </div>
+    <header class="bg-blue-600 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <button onclick="toggleDarkMode()" class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors">
-                        <i class="fas fa-moon dark:fa-sun text-gray-600 dark:text-gray-300"></i>
-                    </button>
-                    <button onclick="showReportsModal()" class="p-2 rounded-lg bg-green-100 hover:bg-green-200 text-green-600 transition-colors">
-                        <i class="fas fa-chart-bar"></i>
-                    </button>
+                    <i class="fas fa-tools text-2xl"></i>
+                    <h1 class="text-xl font-bold">ThunderNet - Control de Materiales</h1>
                 </div>
+                <button id="themeToggle" class="p-2 rounded-lg hover:bg-blue-700">
+                    <i class="fas fa-moon"></i>
+                </button>
             </div>
         </div>
     </header>
 
-    <!-- Stats Dashboard -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-blue-100 dark:bg-blue-900">
-                        <i class="fas fa-boxes text-blue-600 dark:text-blue-400"></i>
+    <!-- Navigation Tabs -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="container mx-auto px-4">
+            <div class="flex space-x-1 overflow-x-auto">
+                <button class="tab-btn active px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-blue-500 text-blue-600" data-tab="dashboard">
+                    <i class="fas fa-chart-pie mr-2"></i>Dashboard
+                </button>
+                <button class="tab-btn px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="registro">
+                    <i class="fas fa-plus mr-2"></i>Registro
+                </button>
+                <button class="tab-btn px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="reportes">
+                    <i class="fas fa-file-alt mr-2"></i>Reportes
+                </button>
+                <button class="tab-btn px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="importar">
+                    <i class="fas fa-upload mr-2"></i>Importar
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-6">
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-blue-100 text-blue-500">
+                            <i class="fas fa-boxes"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm text-gray-500">Total Registros</p>
+                            <p class="text-2xl font-semibold text-gray-700" id="totalRegistros">0</p>
+                        </div>
                     </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Materiales</p>
-                        <p class="text-2xl font-semibold text-gray-900 dark:text-white" id="totalMaterials">0</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-green-100 text-green-500">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm text-gray-500">Hoy</p>
+                            <p class="text-2xl font-semibold text-gray-700" id="registrosHoy">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-yellow-100 text-yellow-500">
+                            <i class="fas fa-calendar-week"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm text-gray-500">Esta Semana</p>
+                            <p class="text-2xl font-semibold text-gray-700" id="registrosSemana">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-purple-100 text-purple-500">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm text-gray-500">Este Mes</p>
+                            <p class="text-2xl font-semibold text-gray-700" id="registrosMes">0</p>
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-green-100 dark:bg-green-900">
-                        <i class="fas fa-check-circle text-green-600 dark:text-green-400"></i>
+
+            <!-- Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">Consumo por Categoría</h3>
+                    <div style="height: 300px;">
+                        <canvas id="categoryChart"></canvas>
                     </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">En Stock</p>
-                        <p class="text-2xl font-semibold text-gray-900 dark:text-white" id="inStock">0</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">Tendencia Mensual</h3>
+                    <div style="height: 300px;">
+                        <canvas id="trendChart"></canvas>
                     </div>
                 </div>
             </div>
-            
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-red-100 dark:bg-red-900">
-                        <i class="fas fa-exclamation-triangle text-red-600 dark:text-red-400"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Bajo Stock</p>
-                        <p class="text-2xl font-semibold text-gray-900 dark:text-white" id="lowStock">0</p>
+
+            <!-- Recent Records Table -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                        <h3 class="text-lg font-semibold">Registros Recientes</h3>
+                        <div class="mt-4 sm:mt-0 flex space-x-2">
+                            <input type="date" id="filterDate" class="px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            <input type="text" id="filterCode" placeholder="Filtrar por código" class="px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-purple-100 dark:bg-purple-900">
-                        <i class="fas fa-calendar text-purple-600 dark:text-purple-400"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Esta Semana</p>
-                        <p class="text-2xl font-semibold text-gray-900 dark:text-white" id="thisWeek">0</p>
-                    </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acopladores</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conectores</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fibra Drop</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="registrosTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Data will be populated here -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <!-- Search and Filters -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
-            <div class="flex flex-col sm:flex-row gap-4">
-                <div class="flex-1">
-                    <input 
-                        type="text" 
-                        id="searchInput"
-                        placeholder="Buscar por material, nombre o guía..."
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                        oninput="filterMaterials()"
-                    >
-                </div>
-                <div class="flex gap-2">
-                    <select id="statusFilter" onchange="filterMaterials()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                        <option value="">Todos los estados</option>
-                        <option value="green">En stock</option>
-                        <option value="red">Bajo stock</option>
-                    </select>
-                    <button onclick="clearFilters()" class="px-4 py-2 bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Materials Grid -->
-        <div id="materialsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <!-- Materials will be loaded here -->
-        </div>
-
-        <!-- Empty State -->
-        <div id="emptyState" class="hidden text-center py-12">
-            <i class="fas fa-box-open text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
-            <h3 class="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">No hay materiales registrados</h3>
-            <p class="text-gray-500 dark:text-gray-500 mb-6">Comienza agregando tu primer material</p>
-            <button onclick="showAddModal()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                <i class="fas fa-plus mr-2"></i>Agregar Material
-            </button>
-        </div>
-    </div>
-
-    <!-- Floating Action Button -->
-    <div class="floating-action no-print">
-        <button onclick="showAddModal()" class="w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center">
-            <i class="fas fa-plus text-xl"></i>
-        </button>
-    </div>
-
-    <!-- Add/Edit Material Modal -->
-    <div id="materialModal" class="hidden fixed inset-0 bg-black bg-opacity-50 modal z-50 flex items-center justify-center p-4">
-        <div class="glass-effect rounded-xl max-w-md w-full max-h-screen overflow-y-auto slide-up">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 id="modalTitle" class="text-xl font-semibold text-gray-900 dark:text-white">Agregar Material</h3>
-                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
-                </div>
-                
-                <form id="materialForm" onsubmit="saveMaterial(event)">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Material*</label>
-                            <input type="text" id="material" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre*</label>
-                            <input type="text" id="nombre" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha*</label>
-                            <input type="date" id="fecha" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Guía*</label>
-                            <input type="text" id="guia" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Entrega*</label>
-                            <input type="number" id="entrega" required min="0" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Total Consumo*</label>
-                            <input type="number" id="totalConsumo" required min="0" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Formulario</label>
-                            <input type="text" id="formu" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                        </div>
-                    </div>
+        <!-- Registro Tab -->
+        <div id="registro" class="tab-content hidden">
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">
+                        <i class="fas fa-clipboard-list mr-2"></i>
+                        Registro de Materiales de Cuadrillas Integrales
+                    </h2>
                     
-                    <div class="flex gap-3 mt-6">
-                        <button type="button" onclick="closeModal()" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                            Cancelar
-                        </button>
-                        <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                            <i class="fas fa-save mr-2"></i>Guardar
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Reports Modal -->
-    <div id="reportsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 modal z-50 flex items-center justify-center p-4">
-        <div class="glass-effect rounded-xl max-w-lg w-full max-h-screen overflow-y-auto slide-up">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Reportes y Exportaciones</h3>
-                    <button onclick="closeReportsModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
-                </div>
-                
-                <div class="space-y-4">
-                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                        <h4 class="font-medium text-gray-900 dark:text-white mb-3">Reporte por Fechas</h4>
-                        <div class="grid grid-cols-2 gap-3 mb-4">
+                    <form id="materialForm" class="space-y-6">
+                        <!-- Código y Fecha -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
                             <div>
-                                <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Desde</label>
-                                <input type="date" id="reportFromDate" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">CÓDIGO</label>
+                                <input type="text" id="codigo" required 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                       placeholder="Ej: AC01">
                             </div>
                             <div>
-                                <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Hasta</label>
-                                <input type="date" id="reportToDate" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">FECHA</label>
+                                <input type="date" id="fecha" required 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                         </div>
-                        <button onclick="generateDateReport()" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                            <i class="fas fa-file-pdf mr-2"></i>Generar PDF por Fechas
-                        </button>
-                    </div>
-                    
-                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                        <h4 class="font-medium text-gray-900 dark:text-white mb-3">Exportaciones Completas</h4>
-                        <div class="space-y-2">
-                            <button onclick="exportToCSV()" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                                <i class="fas fa-file-csv mr-2"></i>Exportar a CSV
+
+                        <!-- Acopladores -->
+                        <div class="p-4 border-2 border-blue-200 rounded-lg">
+                            <h3 class="text-lg font-semibold text-blue-700 mb-3">ACOPLADORES</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">ACOPLADOR APC</label>
+                                    <input type="number" id="acopladorAPC" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">ACOPLADOR UPC</label>
+                                    <input type="number" id="acopladorUPC" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Conectores -->
+                        <div class="p-4 border-2 border-green-200 rounded-lg">
+                            <h3 class="text-lg font-semibold text-green-700 mb-3">CONECTORES</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">CONECTORES APC</label>
+                                    <input type="number" id="conectorAPC" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">CONECTORES UPC</label>
+                                    <input type="number" id="conectorUPC" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Divisores -->
+                        <div class="p-4 border-2 border-purple-200 rounded-lg">
+                            <h3 class="text-lg font-semibold text-purple-700 mb-3">DIVISORES</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">DIVISOR 1 X 16</label>
+                                    <input type="number" id="divisor1x16" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">DIVISOR 1 X 8</label>
+                                    <input type="number" id="divisor1x8" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fibra -->
+                        <div class="p-4 border-2 border-yellow-200 rounded-lg">
+                            <h3 class="text-lg font-semibold text-yellow-700 mb-3">FIBRA</h3>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">FIBRA DROP 1F (Mts)</label>
+                                <input type="number" id="fibraDrop1F" min="0" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                            </div>
+                        </div>
+
+                        <!-- Otros -->
+                        <div class="p-4 border-2 border-red-200 rounded-lg">
+                            <h3 class="text-lg font-semibold text-red-700 mb-3">OTROS</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">GRAPAS</label>
+                                    <input type="number" id="grapas" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">TERMOS</label>
+                                    <input type="number" id="termos" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">ONU</label>
+                                    <input type="number" id="onu" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Patch Cord -->
+                        <div class="p-4 border-2 border-indigo-200 rounded-lg">
+                            <h3 class="text-lg font-semibold text-indigo-700 mb-3">PATCH CORD</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">PTC A-A</label>
+                                    <input type="number" id="ptcAA" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">PTC V-A</label>
+                                    <input type="number" id="ptcVA" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ONUs y Rosetas -->
+                        <div class="p-4 border-2 border-pink-200 rounded-lg">
+                            <h3 class="text-lg font-semibold text-pink-700 mb-3">ONUS_ROSETAS</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">ONU</label>
+                                    <input type="number" id="onuRoseta" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">ROSETA</label>
+                                    <input type="number" id="roseta" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Servilletas y Cinta D.F. -->
+                        <div class="p-4 border-2 border-teal-200 rounded-lg">
+                            <h3 class="text-lg font-semibold text-teal-700 mb-3">SERVILLETAS_CINTA D.F.</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">SERVILLETAS</label>
+                                    <input type="number" id="servilletas" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">C. DOBLE FACE</label>
+                                    <input type="number" id="cintaDobleFace" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Teipe y Tirro -->
+                        <div class="p-4 border-2 border-orange-200 rounded-lg">
+                            <h3 class="text-lg font-semibold text-orange-700 mb-3">TEIPE_TIRRO</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">TEIPE</label>
+                                    <input type="number" id="teipe" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">TIRRO</label>
+                                    <input type="number" id="tirro" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tirrajes -->
+                        <div class="p-4 border-2 border-gray-300 rounded-lg">
+                            <h3 class="text-lg font-semibold text-gray-700 mb-3">TIRRAJES</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">TIRRAP G</label>
+                                    <input type="number" id="tirrapG" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">TIRRAP M</label>
+                                    <input type="number" id="tirrapM" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">TIRRAP P</label>
+                                    <input type="number" id="tirrapP" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="flex justify-center space-x-4 pt-6">
+                            <button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg transition duration-200">
+                                <i class="fas fa-save mr-2"></i>Guardar
                             </button>
-                            <button onclick="generateFullPDFReport()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                                <i class="fas fa-file-pdf mr-2"></i>Reporte PDF Completo
+                            <button type="button" id="limpiarForm" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-lg transition duration-200">
+                                <i class="fas fa-times mr-2"></i>Cerrar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reportes Tab -->
+        <div id="reportes" class="tab-content hidden">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-2xl font-bold mb-6"><i class="fas fa-chart-bar mr-2"></i>Reportes y Análisis</h2>
+                
+                <!-- Date Range Filter -->
+                <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio</label>
+                            <input type="date" id="reportStartDate" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Fin</label>
+                            <input type="date" id="reportEndDate" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div class="flex items-end">
+                            <button id="generateReport" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md">
+                                <i class="fas fa-chart-line mr-2"></i>Generar Reporte
                             </button>
                         </div>
                     </div>
                 </div>
+
+                <!-- Report Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="text-lg font-semibold mb-4">Consumo Total por Categoría</h3>
+                        <div style="height: 400px;">
+                            <canvas id="reportCategoryChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="text-lg font-semibold mb-4">Evolución Temporal</h3>
+                        <div style="height: 400px;">
+                            <canvas id="reportTimeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Options -->
+                <div class="mt-6 flex flex-wrap gap-4">
+                    <button id="exportPDF" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-md">
+                        <i class="fas fa-file-pdf mr-2"></i>Exportar PDF
+                    </button>
+                    <button id="exportCSV" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md">
+                        <i class="fas fa-file-csv mr-2"></i>Exportar CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Importar Tab -->
+        <div id="importar" class="tab-content hidden">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-2xl font-bold mb-6"><i class="fas fa-upload mr-2"></i>Importar Datos Existentes</h2>
+                
+                <div class="max-w-2xl mx-auto">
+                    <div class="text-center p-8 border-2 border-dashed border-gray-300 rounded-lg mb-6">
+                        <i class="fas fa-cloud-upload-alt text-6xl text-gray-400 mb-4"></i>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">Importar desde Google Sheets</h3>
+                        <p class="text-gray-500 mb-4">Copia y pega los datos de tu hoja de cálculo en el área de texto abajo</p>
+                        
+                        <textarea id="importData" rows="10" 
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+                                  placeholder="Pega aquí los datos de tu Excel...&#10;Formato esperado:&#10;CODIGO,ACOPLADOR_APC,ACOPLADOR_UPC,CONECTOR_APC,CONECTOR_UPC,DIVISOR_1X16,DIVISOR_1X8,FIBRA_DROP,GRAPAS,TERMOS,ONU,PTC_AA,PTC_VA,ONU_ROSETA,ROSETA,SERVILLETAS,CINTA_DOBLE_FACE,TEIPE,TIRRO,TIRRAP_G,TIRRAP_M,TIRRAP_P,FECHA"></textarea>
+                        
+                        <button id="processImport" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-md">
+                            <i class="fas fa-cogs mr-2"></i>Procesar Importación
+                        </button>
+                    </div>
+
+                    <!-- Sample Data Preview -->
+                    <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <h4 class="font-semibold text-yellow-800 mb-2">
+                            <i class="fas fa-info-circle mr-2"></i>Ejemplo de datos esperados:
+                        </h4>
+                        <pre class="text-sm text-yellow-700 overflow-x-auto">AC01,0,2,2,3,0,0,186,45,2,2,2,0,2,0,0,0,0,6,7,0,0,29/07/2025
+AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,0,0,0,0,6,8,0,0,28/07/2025</pre>
+                    </div>
+
+                    <!-- Firebase Quick Setup -->
+                    <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <h4 class="font-semibold text-blue-800 mb-2">
+                            <i class="fas fa-database mr-2"></i>Configuración Firebase
+                        </h4>
+                        <p class="text-blue-700 text-sm mb-3">Para usar la base de datos, configura tus credenciales de Firebase:</p>
+                        <button id="configFirebase" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md text-sm">
+                            <i class="fas fa-cog mr-2"></i>Configurar Firebase
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Firebase Config Modal -->
+    <div id="firebaseModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <h3 class="text-lg font-semibold mb-4">Configuración Firebase</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                    <input type="text" id="firebaseApiKey" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Project ID</label>
+                    <input type="text" id="firebaseProjectId" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Auth Domain</label>
+                    <input type="text" id="firebaseAuthDomain" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-2 mt-6">
+                <button id="cancelFirebaseConfig" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">
+                    Cancelar
+                </button>
+                <button id="saveFirebaseConfig" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                    Guardar
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Toast Notifications -->
-    <div id="toast" class="hidden fixed top-4 right-4 z-50 no-print">
-        <div class="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg fade-in">
-            <div class="flex items-center">
-                <i class="fas fa-check-circle mr-2"></i>
-                <span id="toastMessage">Operación exitosa</span>
-            </div>
-        </div>
-    </div>
+    <!-- Success/Error Messages -->
+    <div id="messageContainer" class="fixed top-4 right-4 z-50"></div>
 
     <script>
-      // 🔥 CONFIGURACIÓN DE FIREBASE (¡Reemplaza con tus datos!)
-      const firebaseConfig = {
-        apiKey: "AIzaSyCQD8cR0CDAEXKvcQLHFocUVjMDLsTfvP0",
-        authDomain: "control-de-materiales-aa944.firebaseapp.com",
-        projectId: "control-de-materiales-aa944",
-        storageBucket: "control-de-materiales-aa944.appspot.com",
-        messagingSenderId: "351278560249",
-        appId: "1:351278560249:web:cb480b35a1919fa1ca0328"
-      };
+        // Global variables
+        let db = null;
+        let materialesData = [];
+        let categoryChart = null;
+        let trendChart = null;
+        let reportCategoryChart = null;
+        let reportTimeChart = null;
 
-      // Inicializar Firebase
-      firebase.initializeApp(firebaseConfig);
-      const db = firebase.firestore();
-      const materialsCollection = db.collection('materials');
-
-      // Variables globales
-      let materials = [];
-      let editingMaterial = null;
-      let darkMode = localStorage.getItem('darkMode') === 'true';
-
-      // Inicializar app
-      document.addEventListener('DOMContentLoaded', function() {
-        loadMaterials();
-        updateStats();
-        renderMaterials();
-
-        // Fecha por defecto: hoy
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('reportToDate').value = today;
-        const monthAgo = new Date();
-        monthAgo.setDate(monthAgo.getDate() - 30);
-        document.getElementById('reportFromDate').value = monthAgo.toISOString().split('T')[0];
-
-        if (darkMode) document.body.classList.add('dark');
-      });
-
-      // Alternar modo oscuro
-      function toggleDarkMode() {
-        darkMode = !darkMode;
-        document.body.classList.toggle('dark');
-        localStorage.setItem('darkMode', darkMode);
-      }
-
-      // Cargar materiales desde Firestore
-      function loadMaterials() {
-        materialsCollection.onSnapshot(snapshot => {
-          materials = [];
-          snapshot.forEach(doc => {
-            materials.push({ id: doc.id, ...doc.data() });
-          });
-          updateStats();
-          renderMaterials();
-        }, error => {
-          console.error("Error al cargar materiales: ", error);
-          showToast("Error al conectar con la base de datos");
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTabs();
+            initializeTheme();
+            setTodayDate();
+            loadMockData();
+            updateDashboard();
+            initializeCharts();
+            
+            // Event listeners
+            document.getElementById('materialForm').addEventListener('submit', handleFormSubmit);
+            document.getElementById('limpiarForm').addEventListener('click', clearForm);
+            document.getElementById('configFirebase').addEventListener('click', showFirebaseModal);
+            document.getElementById('saveFirebaseConfig').addEventListener('click', saveFirebaseConfig);
+            document.getElementById('cancelFirebaseConfig').addEventListener('click', hideFirebaseModal);
+            document.getElementById('processImport').addEventListener('click', processImport);
+            document.getElementById('generateReport').addEventListener('click', generateReport);
+            document.getElementById('exportPDF').addEventListener('click', exportToPDF);
+            document.getElementById('exportCSV').addEventListener('click', exportToCSV);
+            document.getElementById('filterDate').addEventListener('change', filterData);
+            document.getElementById('filterCode').addEventListener('input', filterData);
         });
-      }
 
-      // Obtener estado (color)
-      function getStatusColor(entrega, totalConsumo) {
-        return entrega >= totalConsumo ? 'green' : 'red';
-      }
+        // Tab functionality
+        function initializeTabs() {
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
 
-      // Actualizar estadísticas
-      function updateStats() {
-        const total = materials.length;
-        const inStock = materials.filter(m => m.entrega >= m.totalConsumo).length;
-        const lowStock = materials.filter(m => m.entrega < m.totalConsumo).length;
-
-        const weekAgo = new Date();
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        const thisWeek = materials.filter(m => new Date(m.fecha) >= weekAgo).length;
-
-        document.getElementById('totalMaterials').textContent = total;
-        document.getElementById('inStock').textContent = inStock;
-        document.getElementById('lowStock').textContent = lowStock;
-        document.getElementById('thisWeek').textContent = thisWeek;
-      }
-
-      // Renderizar materiales
-      function renderMaterials(filteredMaterials = null) {
-        const materialsToRender = filteredMaterials || materials;
-        const grid = document.getElementById('materialsGrid');
-        const emptyState = document.getElementById('emptyState');
-
-        if (materialsToRender.length === 0) {
-          grid.innerHTML = '';
-          emptyState.classList.remove('hidden');
-          return;
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const targetTab = btn.getAttribute('data-tab');
+                    
+                    // Update buttons
+                    tabButtons.forEach(b => {
+                        b.classList.remove('active', 'border-blue-500', 'text-blue-600');
+                        b.classList.add('border-transparent', 'text-gray-500');
+                    });
+                    btn.classList.add('active', 'border-blue-500', 'text-blue-600');
+                    btn.classList.remove('border-transparent', 'text-gray-500');
+                    
+                    // Update content
+                    tabContents.forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    document.getElementById(targetTab).classList.remove('hidden');
+                });
+            });
         }
 
-        emptyState.classList.add('hidden');
-        grid.innerHTML = materialsToRender.map(material => {
-          const statusColor = getStatusColor(material.entrega, material.totalConsumo);
-          const statusClass = `status-${statusColor}`;
-          const difference = material.entrega - material.totalConsumo;
-
-          return `
-            <div class="material-card bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-              <div class="${statusClass} p-4 text-white">
-                <div class="flex justify-between items-start mb-2">
-                  <h3 class="font-bold text-lg">${material.material}</h3>
-                  <div class="flex space-x-2">
-                    <button onclick="editMaterial('${material.id}')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded">
-                      <i class="fas fa-edit text-sm"></i>
-                    </button>
-                    <button onclick="deleteMaterial('${material.id}')" class="p-1 hover:bg-white hover:bg-opacity-20 rounded">
-                      <i class="fas fa-trash text-sm"></i>
-                    </button>
-                  </div>
-                </div>
-                <p class="text-white text-opacity-90 truncate">${material.nombre}</p>
-                <div class="flex justify-between items-center mt-3">
-                  <span class="text-sm">Stock: ${difference >= 0 ? '+' : ''}${difference}</span>
-                  <span class="text-sm">${new Date(material.fecha).toLocaleDateString()}</span>
-                </div>
-              </div>
-              <div class="p-4">
-                <div class="grid grid-cols-2 gap-3 text-sm">
-                  <div><span class="text-gray-500 dark:text-gray-400">Guía:</span><p class="font-medium">${material.guia}</p></div>
-                  <div><span class="text-gray-500 dark:text-gray-400">Entrega:</span><p class="font-medium">${material.entrega}</p></div>
-                  <div><span class="text-gray-500 dark:text-gray-400">Consumo:</span><p class="font-medium">${material.totalConsumo}</p></div>
-                  <div><span class="text-gray-500 dark:text-gray-400">Formulario:</span><p class="font-medium">${material.formu || 'N/A'}</p></div>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
-
-      // Filtros
-      function filterMaterials() {
-        const term = document.getElementById('searchInput').value.toLowerCase();
-        const status = document.getElementById('statusFilter').value;
-
-        let filtered = materials.filter(m => {
-          const matchesSearch = m.material.toLowerCase().includes(term) ||
-                                m.nombre.toLowerCase().includes(term) ||
-                                m.guia.toLowerCase().includes(term);
-          if (status) return matchesSearch && getStatusColor(m.entrega, m.totalConsumo) === status;
-          return matchesSearch;
-        });
-
-        renderMaterials(filtered);
-      }
-
-      function clearFilters() {
-        document.getElementById('searchInput').value = '';
-        document.getElementById('statusFilter').value = '';
-        renderMaterials();
-      }
-
-      // Modal agregar/editar
-      function showAddModal() {
-        editingMaterial = null;
-        document.getElementById('modalTitle').textContent = 'Agregar Material';
-        document.getElementById('materialForm').reset();
-        document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
-        document.getElementById('materialModal').classList.remove('hidden');
-      }
-
-      function editMaterial(id) {
-        const material = materials.find(m => m.id === id);
-        if (!material) return;
-
-        editingMaterial = material;
-        document.getElementById('modalTitle').textContent = 'Editar Material';
-        Object.keys(material).forEach(key => {
-          const el = document.getElementById(key);
-          if (el) el.value = material[key];
-        });
-        document.getElementById('materialModal').classList.remove('hidden');
-      }
-
-      // Guardar en Firestore
-      function saveMaterial(e) {
-        e.preventDefault();
-
-        const data = {
-          material: document.getElementById('material').value,
-          nombre: document.getElementById('nombre').value,
-          fecha: document.getElementById('fecha').value,
-          guia: document.getElementById('guia').value,
-          entrega: parseInt(document.getElementById('entrega').value),
-          totalConsumo: parseInt(document.getElementById('totalConsumo').value),
-          formu: document.getElementById('formu').value || ''
-        };
-
-        if (editingMaterial) {
-          materialsCollection.doc(editingMaterial.id).update(data)
-            .then(() => {
-              closeModal();
-              showToast('Material actualizado');
-            })
-            .catch(() => showToast('Error al actualizar'));
-        } else {
-          materialsCollection.add(data)
-            .then(() => {
-              closeModal();
-              showToast('Material agregado');
-            })
-            .catch(() => showToast('Error al guardar'));
+        // Theme functionality
+        function initializeTheme() {
+            const themeToggle = document.getElementById('themeToggle');
+            themeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('dark');
+                const icon = themeToggle.querySelector('i');
+                icon.classList.toggle('fa-moon');
+                icon.classList.toggle('fa-sun');
+            });
         }
-      }
 
-      // Eliminar
-      function deleteMaterial(id) {
-        if (confirm('¿Eliminar este material?')) {
-          materialsCollection.doc(id).delete()
-            .then(() => showToast('Eliminado'))
-            .catch(() => showToast('Error al eliminar'));
+        // Set today's date
+        function setTodayDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('fecha').value = today;
+            document.getElementById('reportEndDate').value = today;
+            
+            // Set start date to 30 days ago
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            document.getElementById('reportStartDate').value = thirtyDaysAgo.toISOString().split('T')[0];
         }
-      }
 
-      // Cerrar modales
-      function closeModal() {
-        document.getElementById('materialModal').classList.add('hidden');
-        editingMaterial = null;
-      }
+        // Load mock data for demonstration
+        function loadMockData() {
+            // Sample data based on the Excel structure
+            materialesData = [
+                {
+                    id: '1',
+                    codigo: 'AC01',
+                    fecha: '2025-01-29',
+                    acopladorAPC: 0,
+                    acopladorUPC: 2,
+                    conectorAPC: 2,
+                    conectorUPC: 3,
+                    divisor1x16: 0,
+                    divisor1x8: 0,
+                    fibraDrop1F: 186,
+                    grapas: 45,
+                    termos: 2,
+                    onu: 2,
+                    ptcAA: 2,
+                    ptcVA: 0,
+                    onuRoseta: 2,
+                    roseta: 0,
+                    servilletas: 0,
+                    cintaDobleFace: 0,
+                    teipe: 6,
+                    tirro: 7,
+                    tirrapG: 0,
+                    tirrapM: 0,
+                    tirrapP: 0
+                },
+                {
+                    id: '2',
+                    codigo: 'AC01',
+                    fecha: '2025-01-28',
+                    acopladorAPC: 3,
+                    acopladorUPC: 0,
+                    conectorAPC: 5,
+                    conectorUPC: 0,
+                    divisor1x16: 0,
+                    divisor1x8: 0,
+                    fibraDrop1F: 126,
+                    grapas: 18,
+                    termos: 4,
+                    onu: 3,
+                    ptcAA: 0,
+                    ptcVA: 3,
+                    onuRoseta: 3,
+                    roseta: 0,
+                    servilletas: 0,
+                    cintaDobleFace: 0,
+                    teipe: 6,
+                    tirro: 8,
+                    tirrapG: 0,
+                    tirrapM: 0,
+                    tirrapP: 0
+                }
+            ];
+        }
 
-      function closeReportsModal() {
-        document.getElementById('reportsModal').classList.add('hidden');
-      }
+        // Update dashboard statistics
+        function updateDashboard() {
+            const today = new Date().toISOString().split('T')[0];
+            const thisWeekStart = new Date();
+            thisWeekStart.setDate(thisWeekStart.getDate() - 7);
+            const thisMonthStart = new Date();
+            thisMonthStart.setDate(1);
 
-      // Reportes
-      function showReportsModal() {
-        document.getElementById('reportsModal').classList.remove('hidden');
-      }
+            const totalRegistros = materialesData.length;
+            const registrosHoy = materialesData.filter(item => item.fecha === today).length;
+            const registrosSemana = materialesData.filter(item => 
+                new Date(item.fecha) >= thisWeekStart
+            ).length;
+            const registrosMes = materialesData.filter(item => 
+                new Date(item.fecha) >= thisMonthStart
+            ).length;
 
-      function generateDateReport() {
-        const from = document.getElementById('reportFromDate').value;
-        const to = document.getElementById('reportToDate').value;
-        if (!from || !to) return alert('Selecciona ambas fechas');
+            document.getElementById('totalRegistros').textContent = totalRegistros;
+            document.getElementById('registrosHoy').textContent = registrosHoy;
+            document.getElementById('registrosSemana').textContent = registrosSemana;
+            document.getElementById('registrosMes').textContent = registrosMes;
 
-        const filtered = materials.filter(m => m.fecha >= from && m.fecha <= to);
-        generatePDFReport(filtered, `Reporte de ${from} a ${to}`);
-      }
+            updateTable();
+        }
 
-      function generateFullPDFReport() {
-        generatePDFReport(materials, 'Reporte Completo');
-      }
+        // Update table with filtered data
+        function updateTable() {
+            const tbody = document.getElementById('registrosTableBody');
+            const filterDate = document.getElementById('filterDate').value;
+            const filterCode = document.getElementById('filterCode').value.toLowerCase();
 
-      function generatePDFReport(data, title) {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        doc.setFontSize(18);
-        doc.text(title, 20, 20);
-        doc.setFontSize(12);
-        doc.text(`Generado: ${new Date().toLocaleDateString()}`, 20, 30);
-        doc.text(`Total: ${data.length}`, 20, 40);
+            let filteredData = materialesData;
 
-        let y = 60;
-        const headers = ['Material', 'Nombre', 'Fecha', 'Guía', 'Entrega', 'Consumo', 'Stock'];
-        const cols = [25, 35, 25, 20, 20, 20, 20];
-        let x = 20;
+            if (filterDate) {
+                filteredData = filteredData.filter(item => item.fecha === filterDate);
+            }
 
-        doc.setFontSize(10);
-        doc.setFont(undefined, 'bold');
-        headers.forEach((h, i) => { doc.text(h, x, y); x += cols[i]; });
-        y += 10;
-        doc.line(20, y - 5, 185, y - 5);
+            if (filterCode) {
+                filteredData = filteredData.filter(item => 
+                    item.codigo.toLowerCase().includes(filterCode)
+                );
+            }
 
-        doc.setFont(undefined, 'normal');
-        data.forEach(m => {
-          if (y > 280) { doc.addPage(); y = 20; }
-          x = 20;
-          const stock = m.entrega - m.totalConsumo;
-          [m.material, m.nombre, m.fecha, m.guia, m.entrega, m.totalConsumo, stock].forEach((v, i) => {
-            doc.text(v.toString(), x, y);
-            x += cols[i];
-          });
-          y += 8;
-        });
+            tbody.innerHTML = filteredData.map(item => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.codigo}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.fecha}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.acopladorAPC + item.acopladorUPC}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.conectorAPC + item.conectorUPC}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.fibraDrop1F}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="editRecord('${item.id}')" class="text-blue-600 hover:text-blue-900 mr-2">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteRecord('${item.id}')" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
 
-        doc.save(`${title.replace(/\s+/g, '_')}.pdf`);
-        showToast('PDF generado');
-      }
+        // Initialize charts
+        function initializeCharts() {
+            // Category Chart
+            const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+            const categoryData = calculateCategoryTotals();
+            
+            categoryChart = new Chart(categoryCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(categoryData),
+                    datasets: [{
+                        data: Object.values(categoryData),
+                        backgroundColor: [
+                            '#3B82F6', '#EF4444', '#10B981', '#F59E0B',
+                            '#8B5CF6', '#F97316', '#06B6D4', '#84CC16'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
 
-      // Exportar CSV
-      function exportToCSV() {
-        const csv = [
-          ['Material', 'Nombre', 'Fecha', 'Guía', 'Entrega', 'TotalConsumo', 'Formulario'].join(','),
-          ...materials.map(m => [
-            m.material,
-            `"${m.nombre}"`,
-            m.fecha,
-            m.guia,
-            m.entrega,
-            m.totalConsumo,
-            m.formu || ''
-          ].join(','))
-        ].join('\n');
+            // Trend Chart
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            const trendData = calculateTrendData();
+            
+            trendChart = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: trendData.labels,
+                    datasets: [{
+                        label: 'Registros por Día',
+                        data: trendData.values,
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `materiales_${new Date().toISOString().split('T')[0]}.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast('CSV exportado');
-      }
+        // Calculate category totals
+        function calculateCategoryTotals() {
+            const totals = {
+                'Acopladores': 0,
+                'Conectores': 0,
+                'Divisores': 0,
+                'Fibra': 0,
+                'Otros': 0,
+                'Patch Cord': 0,
+                'Tirrajes': 0,
+                'Varios': 0
+            };
 
-      // Toast
-      function showToast(msg) {
-        document.getElementById('toastMessage').textContent = msg;
-        const toast = document.getElementById('toast');
-        toast.classList.remove('hidden');
-        setTimeout(() => toast.classList.add('hidden'), 3000);
-      }
+            materialesData.forEach(item => {
+                totals['Acopladores'] += (item.acopladorAPC || 0) + (item.acopladorUPC || 0);
+                totals['Conectores'] += (item.conectorAPC || 0) + (item.conectorUPC || 0);
+                totals['Divisores'] += (item.divisor1x16 || 0) + (item.divisor1x8 || 0);
+                totals['Fibra'] += item.fibraDrop1F || 0;
+                totals['Otros'] += (item.grapas || 0) + (item.termos || 0) + (item.onu || 0);
+                totals['Patch Cord'] += (item.ptcAA || 0) + (item.ptcVA || 0);
+                totals['Tirrajes'] += (item.tirrapG || 0) + (item.tirrapM || 0) + (item.tirrapP || 0);
+                totals['Varios'] += (item.onuRoseta || 0) + (item.roseta || 0) + (item.servilletas || 0) + 
+                                   (item.cintaDobleFace || 0) + (item.teipe || 0) + (item.tirro || 0);
+            });
 
-      // Cerrar modales con clic fuera
-      document.addEventListener('click', e => {
-        if (e.target.id === 'materialModal') closeModal();
-        if (e.target.id === 'reportsModal') closeReportsModal();
-      });
+            return totals;
+        }
 
-      // Atajos de teclado
-      document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') { closeModal(); closeReportsModal(); }
-        if (e.ctrlKey && e.key === 'k') { e.preventDefault(); document.getElementById('searchInput').focus(); }
-        if (e.ctrlKey && e.key === 'n') { e.preventDefault(); showAddModal(); }
-      });
+        // Calculate trend data
+        function calculateTrendData() {
+            const dateGroups = {};
+            
+            materialesData.forEach(item => {
+                const date = item.fecha;
+                dateGroups[date] = (dateGroups[date] || 0) + 1;
+            });
+
+            const sortedDates = Object.keys(dateGroups).sort();
+            const values = sortedDates.map(date => dateGroups[date]);
+
+            return {
+                labels: sortedDates,
+                values: values
+            };
+        }
+
+        // Form handling
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const newRecord = {
+                id: Date.now().toString(),
+                codigo: document.getElementById('codigo').value,
+                fecha: document.getElementById('fecha').value,
+                acopladorAPC: parseInt(document.getElementById('acopladorAPC').value) || 0,
+                acopladorUPC: parseInt(document.getElementById('acopladorUPC').value) || 0,
+                conectorAPC: parseInt(document.getElementById('conectorAPC').value) || 0,
+                conectorUPC: parseInt(document.getElementById('conectorUPC').value) || 0,
+                divisor1x16: parseInt(document.getElementById('divisor1x16').value) || 0,
+                divisor1x8: parseInt(document.getElementById('divisor1x8').value) || 0,
+                fibraDrop1F: parseInt(document.getElementById('fibraDrop1F').value) || 0,
+                grapas: parseInt(document.getElementById('grapas').value) || 0,
+                termos: parseInt(document.getElementById('termos').value) || 0,
+                onu: parseInt(document.getElementById('onu').value) || 0,
+                ptcAA: parseInt(document.getElementById('ptcAA').value) || 0,
+                ptcVA: parseInt(document.getElementById('ptcVA').value) || 0,
+                onuRoseta: parseInt(document.getElementById('onuRoseta').value) || 0,
+                roseta: parseInt(document.getElementById('roseta').value) || 0,
+                servilletas: parseInt(document.getElementById('servilletas').value) || 0,
+                cintaDobleFace: parseInt(document.getElementById('cintaDobleFace').value) || 0,
+                teipe: parseInt(document.getElementById('teipe').value) || 0,
+                tirro: parseInt(document.getElementById('tirro').value) || 0,
+                tirrapG: parseInt(document.getElementById('tirrapG').value) || 0,
+                tirrapM: parseInt(document.getElementById('tirrapM').value) || 0,
+                tirrapP: parseInt(document.getElementById('tirrapP').value) || 0
+            };
+
+            materialesData.unshift(newRecord);
+            updateDashboard();
+            updateCharts();
+            clearForm();
+            showMessage('Registro guardado exitosamente', 'success');
+            
+            // Switch to dashboard
+            document.querySelector('[data-tab="dashboard"]').click();
+        }
+
+        // Clear form
+        function clearForm() {
+            document.getElementById('materialForm').reset();
+            setTodayDate();
+        }
+
+        // Update charts
+        function updateCharts() {
+            if (categoryChart) {
+                const categoryData = calculateCategoryTotals();
+                categoryChart.data.labels = Object.keys(categoryData);
+                categoryChart.data.datasets[0].data = Object.values(categoryData);
+                categoryChart.update();
+            }
+
+            if (trendChart) {
+                const trendData = calculateTrendData();
+                trendChart.data.labels = trendData.labels;
+                trendChart.data.datasets[0].data = trendData.values;
+                trendChart.update();
+            }
+        }
+
+        // Filter data
+        function filterData() {
+            updateTable();
+        }
+
+        // Edit record
+        function editRecord(id) {
+            const record = materialesData.find(item => item.id === id);
+            if (record) {
+                // Fill form with record data
+                Object.keys(record).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element) {
+                        element.value = record[key];
+                    }
+                });
+                
+                // Switch to registro tab
+                document.querySelector('[data-tab="registro"]').click();
+                
+                // Remove old record
+                materialesData = materialesData.filter(item => item.id !== id);
+            }
+        }
+
+        // Delete record
+        function deleteRecord(id) {
+            if (confirm('¿Estás seguro de que quieres eliminar este registro?')) {
+                materialesData = materialesData.filter(item => item.id !== id);
+                updateDashboard();
+                updateCharts();
+                showMessage('Registro eliminado exitosamente', 'success');
+            }
+        }
+
+        // Firebase configuration
+        function showFirebaseModal() {
+            document.getElementById('firebaseModal').classList.remove('hidden');
+            document.getElementById('firebaseModal').classList.add('flex');
+        }
+
+        function hideFirebaseModal() {
+            document.getElementById('firebaseModal').classList.add('hidden');
+            document.getElementById('firebaseModal').classList.remove('flex');
+        }
+
+        function saveFirebaseConfig() {
+            const apiKey = document.getElementById('firebaseApiKey').value;
+            const projectId = document.getElementById('firebaseProjectId').value;
+            const authDomain = document.getElementById('firebaseAuthDomain').value;
+
+            if (!apiKey || !projectId || !authDomain) {
+                showMessage('Por favor completa todos los campos', 'error');
+                return;
+            }
+
+            // Initialize Firebase (this would be the actual Firebase config)
+           const firebaseConfig = {
+    apiKey: apiKey,
+    authDomain: authDomain,
+    projectId: projectId,
+    storageBucket: `${projectId}.appspot.com`,
+    messagingSenderId: "123456789",
+    appId: "1:123456789:web:abcdef123456789"
+};
+
+            try {
+                // In a real implementation, you would initialize Firebase here
+                // firebase.initializeApp(firebaseConfig);
+                // db = firebase.firestore();
+                
+                showMessage('Firebase configurado exitosamente', 'success');
+                hideFirebaseModal();
+            } catch (error) {
+                showMessage('Error al configurar Firebase: ' + error.message, 'error');
+            }
+        }
+
+        // Import data
+        function processImport() {
+            const importData = document.getElementById('importData').value;
+            if (!importData.trim()) {
+                showMessage('Por favor ingresa los datos a importar', 'error');
+                return;
+            }
+
+            try {
+                const lines = importData.trim().split('\n');
+                let importedCount = 0;
+
+                lines.forEach((line, index) => {
+                    const values = line.split(',');
+                    if (values.length >= 22) {
+                        const record = {
+                            id: Date.now().toString() + index,
+                            codigo: values[0] || '',
+                            acopladorAPC: parseInt(values[1]) || 0,
+                            acopladorUPC: parseInt(values[2]) || 0,
+                            conectorAPC: parseInt(values[3]) || 0,
+                            conectorUPC: parseInt(values[4]) || 0,
+                            divisor1x16: parseInt(values[5]) || 0,
+                            divisor1x8: parseInt(values[6]) || 0,
+                            fibraDrop1F: parseInt(values[7]) || 0,
+                            grapas: parseInt(values[8]) || 0,
+                            termos: parseInt(values[9]) || 0,
+                            onu: parseInt(values[10]) || 0,
+                            ptcAA: parseInt(values[11]) || 0,
+                            ptcVA: parseInt(values[12]) || 0,
+                            onuRoseta: parseInt(values[13]) || 0,
+                            roseta: parseInt(values[14]) || 0,
+                            servilletas: parseInt(values[15]) || 0,
+                            cintaDobleFace: parseInt(values[16]) || 0,
+                            teipe: parseInt(values[17]) || 0,
+                            tirro: parseInt(values[18]) || 0,
+                            tirrapG: parseInt(values[19]) || 0,
+                            tirrapM: parseInt(values[20]) || 0,
+                            tirrapP: parseInt(values[21]) || 0,
+                            fecha: values[22] ? formatDate(values[22]) : new Date().toISOString().split('T')[0]
+                        };
+
+                        materialesData.push(record);
+                        importedCount++;
+                    }
+                });
+
+                updateDashboard();
+                updateCharts();
+                document.getElementById('importData').value = '';
+                showMessage(`${importedCount} registros importados exitosamente`, 'success');
+            } catch (error) {
+                showMessage('Error al procesar los datos: ' + error.message, 'error');
+            }
+        }
+
+        // Format date from DD/MM/YYYY to YYYY-MM-DD
+        function formatDate(dateStr) {
+            const parts = dateStr.split('/');
+            if (parts.length === 3) {
+                const day = parts[0].padStart(2, '0');
+                const month = parts[1].padStart(2, '0');
+                const year = parts[2];
+                return `${year}-${month}-${day}`;
+            }
+            return dateStr;
+        }
+
+        // Generate report
+        function generateReport() {
+            const startDate = document.getElementById('reportStartDate').value;
+            const endDate = document.getElementById('reportEndDate').value;
+
+            if (!startDate || !endDate) {
+                showMessage('Por favor selecciona el rango de fechas', 'error');
+                return;
+            }
+
+            const filteredData = materialesData.filter(item => 
+                item.fecha >= startDate && item.fecha <= endDate
+            );
+
+            // Update report charts
+            updateReportCharts(filteredData);
+            showMessage('Reporte generado exitosamente', 'success');
+        }
+
+        // Update report charts
+        function updateReportCharts(data) {
+            // Category report chart
+            const reportCategoryCtx = document.getElementById('reportCategoryChart');
+            if (reportCategoryChart) {
+                reportCategoryChart.destroy();
+            }
+
+            const categoryTotals = calculateCategoryTotalsForData(data);
+            reportCategoryChart = new Chart(reportCategoryCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(categoryTotals),
+                    datasets: [{
+                        label: 'Total Consumido',
+                        data: Object.values(categoryTotals),
+                        backgroundColor: '#3B82F6',
+                        borderColor: '#1E40AF',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Time report chart
+            const reportTimeCtx = document.getElementById('reportTimeChart');
+            if (reportTimeChart) {
+                reportTimeChart.destroy();
+            }
+
+            const timeData = calculateTimeDataForData(data);
+            reportTimeChart = new Chart(reportTimeCtx, {
+                type: 'line',
+                data: {
+                    labels: timeData.labels,
+                    datasets: [{
+                        label: 'Registros por Día',
+                        data: timeData.values,
+                        borderColor: '#10B981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Calculate category totals for specific data
+        function calculateCategoryTotalsForData(data) {
+            const totals = {
+                'Acopladores': 0,
+                'Conectores': 0,
+                'Divisores': 0,
+                'Fibra': 0,
+                'Otros': 0,
+                'Patch Cord': 0,
+                'Tirrajes': 0,
+                'Varios': 0
+            };
+
+            data.forEach(item => {
+                totals['Acopladores'] += (item.acopladorAPC || 0) + (item.acopladorUPC || 0);
+                totals['Conectores'] += (item.conectorAPC || 0) + (item.conectorUPC || 0);
+                totals['Divisores'] += (item.divisor1x16 || 0) + (item.divisor1x8 || 0);
+                totals['Fibra'] += item.fibraDrop1F || 0;
+                totals['Otros'] += (item.grapas || 0) + (item.termos || 0) + (item.onu || 0);
+                totals['Patch Cord'] += (item.ptcAA || 0) + (item.ptcVA || 0);
+                totals['Tirrajes'] += (item.tirrapG || 0) + (item.tirrapM || 0) + (item.tirrapP || 0);
+                totals['Varios'] += (item.onuRoseta || 0) + (item.roseta || 0) + (item.servilletas || 0) + 
+                                   (item.cintaDobleFace || 0) + (item.teipe || 0) + (item.tirro || 0);
+            });
+
+            return totals;
+        }
+
+        // Calculate time data for specific data
+        function calculateTimeDataForData(data) {
+            const dateGroups = {};
+            
+            data.forEach(item => {
+                const date = item.fecha;
+                dateGroups[date] = (dateGroups[date] || 0) + 1;
+            });
+
+            const sortedDates = Object.keys(dateGroups).sort();
+            const values = sortedDates.map(date => dateGroups[date]);
+
+            return {
+                labels: sortedDates,
+                values: values
+            };
+        }
+
+        // Export to PDF
+        function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(20);
+            doc.text('Reporte de Materiales ThunderNet', 20, 20);
+            
+            doc.setFontSize(12);
+            doc.text('Fecha de generación: ' + new Date().toLocaleDateString(), 20, 30);
+
+            // Add summary statistics
+            let yPosition = 50;
+            doc.text('Resumen Ejecutivo:', 20, yPosition);
+            yPosition += 10;
+
+            const categoryTotals = calculateCategoryTotals();
+            Object.entries(categoryTotals).forEach(([category, total]) => {
+                doc.text(`${category}: ${total}`, 25, yPosition);
+                yPosition += 8;
+            });
+
+            // Add table data
+            yPosition += 10;
+            doc.text('Registros Detallados:', 20, yPosition);
+            yPosition += 10;
+
+            materialesData.slice(0, 20).forEach((item, index) => {
+                if (yPosition > 270) {
+                    doc.addPage();
+                    yPosition = 20;
+                }
+                
+                doc.text(`${item.codigo} - ${item.fecha} - Fibra: ${item.fibraDrop1F}m`, 25, yPosition);
+                yPosition += 8;
+            });
+
+            doc.save('reporte_materiales_thundernet.pdf');
+            showMessage('PDF exportado exitosamente', 'success');
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            const headers = [
+                'Código', 'Fecha', 'Acoplador APC', 'Acoplador UPC', 'Conector APC', 'Conector UPC',
+                'Divisor 1x16', 'Divisor 1x8', 'Fibra Drop 1F', 'Grapas', 'Termos', 'ONU',
+                'PTC AA', 'PTC VA', 'ONU Roseta', 'Roseta', 'Servilletas', 'Cinta Doble Face',
+                'Teipe', 'Tirro', 'Tirrap G', 'Tirrap M', 'Tirrap P'
+            ];
+
+            const csvContent = [
+                headers.join(','),
+                ...materialesData.map(item => [
+                    item.codigo, item.fecha, item.acopladorAPC, item.acopladorUPC,
+                    item.conectorAPC, item.conectorUPC, item.divisor1x16, item.divisor1x8,
+                    item.fibraDrop1F, item.grapas, item.termos, item.onu,
+                    item.ptcAA, item.ptcVA, item.onuRoseta, item.roseta,
+                    item.servilletas, item.cintaDobleFace, item.teipe, item.tirro,
+                    item.tirrapG, item.tirrapM, item.tirrapP
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'materiales_thundernet.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            showMessage('CSV exportado exitosamente', 'success');
+        }
+
+        // Show message
+        function showMessage(message, type) {
+            const messageContainer = document.getElementById('messageContainer');
+            const messageDiv = document.createElement('div');
+            
+            const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            
+            messageDiv.className = `${bgColor} text-white px-4 py-2 rounded-lg shadow-lg mb-2 flex items-center`;
+            messageDiv.innerHTML = `
+                <i class="fas ${icon} mr-2"></i>
+                ${message}
+            `;
+            
+            messageContainer.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 3000);
+        }
     </script>
 </body>
 </html>
