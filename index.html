@@ -1040,13 +1040,23 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
       }
 
       // Delete record
-      function deleteRecord(id) {
-          if (confirm('¿Estás seguro de que quieres eliminar este registro?')) {
-              materialesCollection.doc(id).delete()
-                  .then(() => showMessage('Registro eliminado', 'success'))
-                  .catch(error => showMessage('Error al eliminar: ' + error.message, 'error'));
-          }
-      }
+  function deleteRecord(id) {
+    if (confirm('¿Estás seguro de que quieres eliminar este registro?')) {
+        // Eliminar de Firestore
+        materialesCollection.doc(id).delete()
+            .then(() => {
+                // Solo después de eliminar en Firestore, actualiza el array local
+                materialesData = materialesData.filter(item => item.id !== id);
+                updateDashboard();
+                updateCharts();
+                showMessage('Registro eliminado exitosamente', 'success');
+            })
+            .catch(error => {
+                console.error("Error al eliminar el registro: ", error);
+                showMessage('Error al eliminar: ' + error.message, 'error');
+            });
+    }
+}
 
       // Import data
       function processImport() {
