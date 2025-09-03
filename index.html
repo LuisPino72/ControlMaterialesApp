@@ -574,10 +574,10 @@
                 </button>
                 <button
                   type="button"
-                  id="limpiarForm"
-                  class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-lg transition duration-200"
+                  id="cancelEdit"
+                  class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg transition duration-200"
                 >
-                  <i class="fas fa-times mr-2"></i>Borrar
+                  <i class="fas fa-times mr-2"></i>Cancelar
                 </button>
               </div>
             </form>
@@ -711,18 +711,18 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
     <script>
       // 🔥 CONFIGURACIÓN DE FIREBASE (AUTOMÁTICA)
       const firebaseConfig = {
-        apiKey: "AIzaSyCQD8cR0CDAEXKvcQLHFocUVjMDLsTfvP0",
-        authDomain: "control-de-materiales-aa944.firebaseapp.com",
-        projectId: "control-de-materiales-aa944",
-        storageBucket: "control-de-materiales-aa944.appspot.com",
-        messagingSenderId: "351278560249",
-        appId: "1:351278560249:web:cb480b35a1919fa1ca0328",
+          apiKey: "AIzaSyCQD8cR0CDAEXKvcQLHFocUVjMDLsTfvP0",
+          authDomain: "control-de-materiales-aa944.firebaseapp.com",
+          projectId: "control-de-materiales-aa944",
+          storageBucket: "control-de-materiales-aa944.appspot.com",
+          messagingSenderId: "351278560249",
+          appId: "1:351278560249:web:cb480b35a1919fa1ca0328"
       };
 
       // Inicializar Firebase
       firebase.initializeApp(firebaseConfig);
       const db = firebase.firestore();
-      const materialesCollection = db.collection("materiales");
+      const materialesCollection = db.collection('materiales');
 
       // Global variables
       let materialesData = [];
@@ -730,715 +730,521 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
       let trendChart = null;
       let reportCategoryChart = null;
       let reportTimeChart = null;
+      let editingId = null; // Para manejar edición sin borrar
 
       // Initialize application
-      document.addEventListener("DOMContentLoaded", function () {
-        initializeTabs();
-        initializeTheme();
-        setTodayDate();
-        loadMaterials(); // Cargar desde Firestore
-        updateDashboard();
-        initializeCharts();
+      document.addEventListener('DOMContentLoaded', function() {
+          initializeTabs();
+          initializeTheme();
+          setTodayDate();
+          loadMaterials(); // Cargar desde Firestore
+          updateDashboard();
+          initializeCharts();
 
-        // Event listeners
-        document
-          .getElementById("materialForm")
-          .addEventListener("submit", handleFormSubmit);
-        document
-          .getElementById("limpiarForm")
-          .addEventListener("click", clearForm);
-        document
-          .getElementById("processImport")
-          .addEventListener("click", processImport);
-        document
-          .getElementById("generateReport")
-          .addEventListener("click", generateReport);
-        document
-          .getElementById("exportPDF")
-          .addEventListener("click", exportToPDF);
-        document
-          .getElementById("exportCSV")
-          .addEventListener("click", exportToCSV);
-        document
-          .getElementById("filterDate")
-          .addEventListener("change", filterData);
-        document
-          .getElementById("filterCode")
-          .addEventListener("input", filterData);
-        document
-          .getElementById("cancelEdit")
-          .addEventListener("click", function () {
-            clearForm();
-            document.querySelector('[data-tab="dashboard"]').click();
-          });
+          // Event listeners
+          document.getElementById('materialForm').addEventListener('submit', handleFormSubmit);
+          document.getElementById('cancelEdit').addEventListener('click', clearFormAndReturn);
+          document.getElementById('processImport').addEventListener('click', processImport);
+          document.getElementById('generateReport').addEventListener('click', generateReport);
+          document.getElementById('exportPDF').addEventListener('click', exportToPDF);
+          document.getElementById('exportCSV').addEventListener('click', exportToCSV);
+          document.getElementById('filterDate').addEventListener('change', filterData);
+          document.getElementById('filterCode').addEventListener('input', filterData);
       });
 
       // Tab functionality
       function initializeTabs() {
-        const tabButtons = document.querySelectorAll(".tab-btn");
-        const tabContents = document.querySelectorAll(".tab-content");
-        tabButtons.forEach((btn) => {
-          btn.addEventListener("click", () => {
-            const targetTab = btn.getAttribute("data-tab");
-            tabButtons.forEach((b) => {
-              b.classList.remove("active", "border-blue-500", "text-blue-600");
-              b.classList.add("border-transparent", "text-gray-500");
-            });
-            btn.classList.add("active", "border-blue-500", "text-blue-600");
-            tabContents.forEach((content) => content.classList.add("hidden"));
-            document.getElementById(targetTab).classList.remove("hidden");
+          const tabButtons = document.querySelectorAll('.tab-btn');
+          const tabContents = document.querySelectorAll('.tab-content');
+          tabButtons.forEach(btn => {
+              btn.addEventListener('click', () => {
+                  const targetTab = btn.getAttribute('data-tab');
+                  tabButtons.forEach(b => {
+                      b.classList.remove('active', 'border-blue-500', 'text-blue-600');
+                      b.classList.add('border-transparent', 'text-gray-500');
+                  });
+                  btn.classList.add('active', 'border-blue-500', 'text-blue-600');
+                  tabContents.forEach(content => content.classList.add('hidden'));
+                  document.getElementById(targetTab).classList.remove('hidden');
+              });
           });
-        });
       }
 
       // Theme functionality
       function initializeTheme() {
-        const themeToggle = document.getElementById("themeToggle");
-        themeToggle.addEventListener("click", () => {
-          document.body.classList.toggle("dark");
-          const icon = themeToggle.querySelector("i");
-          icon.classList.toggle("fa-moon");
-          icon.classList.toggle("fa-sun");
-        });
+          const themeToggle = document.getElementById('themeToggle');
+          themeToggle.addEventListener('click', () => {
+              document.body.classList.toggle('dark');
+              const icon = themeToggle.querySelector('i');
+              icon.classList.toggle('fa-moon');
+              icon.classList.toggle('fa-sun');
+          });
       }
 
       // Set today's date
       function setTodayDate() {
-        const today = new Date().toISOString().split("T")[0];
-        document.getElementById("fecha").value = today;
-        document.getElementById("reportEndDate").value = today;
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        document.getElementById("reportStartDate").value = thirtyDaysAgo
-          .toISOString()
-          .split("T")[0];
+          const today = new Date().toISOString().split('T')[0];
+          document.getElementById('fecha').value = today;
+          document.getElementById('reportEndDate').value = today;
+          const thirtyDaysAgo = new Date();
+          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+          document.getElementById('reportStartDate').value = thirtyDaysAgo.toISOString().split('T')[0];
       }
 
       // Load data from Firestore
       function loadMaterials() {
-        materialesCollection.onSnapshot(
-          (snapshot) => {
-            materialesData = [];
-            snapshot.forEach((doc) => {
-              materialesData.push({ id: doc.id, ...doc.data() });
-            });
-            updateDashboard();
-            updateCharts();
-          },
-          (error) => {
-            console.error("Error al cargar materiales: ", error);
-            showMessage("Error al conectar con Firebase", "error");
-          }
-        );
+          materialesCollection.onSnapshot(snapshot => {
+              materialesData = [];
+              snapshot.forEach(doc => {
+                  materialesData.push({ id: doc.id, ...doc.data() });
+              });
+              updateDashboard();
+              updateCharts();
+          }, error => {
+              console.error("Error al cargar materiales: ", error);
+              showMessage("Error al conectar con Firebase", "error");
+          });
       }
 
       // Update dashboard statistics
       function updateDashboard() {
-        const today = new Date().toISOString().split("T")[0];
-        const thisWeekStart = new Date();
-        thisWeekStart.setDate(thisWeekStart.getDate() - 7);
-        const thisMonthStart = new Date();
-        thisMonthStart.setDate(1);
+          const today = new Date().toISOString().split('T')[0];
+          const thisWeekStart = new Date();
+          thisWeekStart.setDate(thisWeekStart.getDate() - 7);
+          const thisMonthStart = new Date();
+          thisMonthStart.setDate(1);
 
-        const totalRegistros = materialesData.length;
-        const registrosHoy = materialesData.filter(
-          (item) => item.fecha === today
-        ).length;
-        const registrosSemana = materialesData.filter(
-          (item) => new Date(item.fecha) >= thisWeekStart
-        ).length;
-        const registrosMes = materialesData.filter(
-          (item) => new Date(item.fecha) >= thisMonthStart
-        ).length;
+          const totalRegistros = materialesData.length;
+          const registrosHoy = materialesData.filter(item => item.fecha === today).length;
+          const registrosSemana = materialesData.filter(item => new Date(item.fecha) >= thisWeekStart).length;
+          const registrosMes = materialesData.filter(item => new Date(item.fecha) >= thisMonthStart).length;
 
-        document.getElementById("totalRegistros").textContent = totalRegistros;
-        document.getElementById("registrosHoy").textContent = registrosHoy;
-        document.getElementById("registrosSemana").textContent =
-          registrosSemana;
-        document.getElementById("registrosMes").textContent = registrosMes;
+          document.getElementById('totalRegistros').textContent = totalRegistros;
+          document.getElementById('registrosHoy').textContent = registrosHoy;
+          document.getElementById('registrosSemana').textContent = registrosSemana;
+          document.getElementById('registrosMes').textContent = registrosMes;
 
-        updateTable();
+          updateTable();
       }
 
       // Update table with filtered data
       function updateTable() {
-        const tbody = document.getElementById("registrosTableBody");
-        const filterDate = document.getElementById("filterDate").value;
-        const filterCode = document
-          .getElementById("filterCode")
-          .value.toLowerCase();
+          const tbody = document.getElementById('registrosTableBody');
+          const filterDate = document.getElementById('filterDate').value;
+          const filterCode = document.getElementById('filterCode').value.toLowerCase();
 
-        let filteredData = materialesData;
-        if (filterDate) {
-          filteredData = filteredData.filter(
-            (item) => item.fecha === filterDate
-          );
-        }
-        if (filterCode) {
-          filteredData = filteredData.filter((item) =>
-            item.codigo.toLowerCase().includes(filterCode)
-          );
-        }
+          let filteredData = materialesData;
+          if (filterDate) {
+              filteredData = filteredData.filter(item => item.fecha === filterDate);
+          }
+          if (filterCode) {
+              filteredData = filteredData.filter(item => item.codigo.toLowerCase().includes(filterCode));
+          }
 
-        tbody.innerHTML = filteredData
-          .map(
-            (item) => `
-                      <tr class="hover:bg-gray-50">
-                          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${
-                            item.codigo
-                          }</td>
-                          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
-                            item.fecha
-                          }</td>
-                          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
-                            (item.acopladorAPC || 0) + (item.acopladorUPC || 0)
-                          }</td>
-                          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
-                            (item.conectorAPC || 0) + (item.conectorUPC || 0)
-                          }</td>
-                          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
-                            item.fibraDrop1F || 0
-                          }</td>
-                          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              <button onclick="editRecord('${
-                                item.id
-                              }')" class="text-blue-600 hover:text-blue-900 mr-2">
-                                  <i class="fas fa-edit"></i>
-                              </button>
-                              <button onclick="deleteRecord('${
-                                item.id
-                              }')" class="text-red-600 hover:text-red-900">
-                                  <i class="fas fa-trash"></i>
-                              </button>
-                          </td>
-                      </tr>
-                  `
-          )
-          .join("");
+          tbody.innerHTML = filteredData.map(item => `
+              <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.codigo}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.fecha}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${(item.acopladorAPC || 0) + (item.acopladorUPC || 0)}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${(item.conectorAPC || 0) + (item.conectorUPC || 0)}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.fibraDrop1F || 0}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button onclick="editRecord('${item.id}')" class="text-blue-600 hover:text-blue-900 mr-2">
+                          <i class="fas fa-edit"></i>
+                      </button>
+                      <button onclick="deleteRecord('${item.id}')" class="text-red-600 hover:text-red-900">
+                          <i class="fas fa-trash"></i>
+                      </button>
+                  </td>
+              </tr>
+          `).join('');
       }
 
       // Initialize charts
       function initializeCharts() {
-        const categoryCtx = document
-          .getElementById("categoryChart")
-          .getContext("2d");
-        const trendCtx = document.getElementById("trendChart").getContext("2d");
+          const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+          const trendCtx = document.getElementById('trendChart').getContext('2d');
 
-        const categoryData = calculateCategoryTotals();
-        categoryChart = new Chart(categoryCtx, {
-          type: "doughnut",
-          data: {
-            labels: Object.keys(categoryData),
-            datasets: [
-              {
-                data: Object.values(categoryData),
-                backgroundColor: [
-                  "#3B82F6",
-                  "#EF4444",
-                  "#10B981",
-                  "#F59E0B",
-                  "#8B5CF6",
-                  "#F97316",
-                  "#06B6D4",
-                  "#84CC16",
-                ],
-                borderWidth: 2,
-                borderColor: "#fff",
+          const categoryData = calculateCategoryTotals();
+          categoryChart = new Chart(categoryCtx, {
+              type: 'doughnut',
+              data: {
+                  labels: Object.keys(categoryData),
+                  datasets: [{
+                      data: Object.values(categoryData),
+                      backgroundColor: ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#F97316', '#06B6D4', '#84CC16'],
+                      borderWidth: 2,
+                      borderColor: '#fff'
+                  }]
               },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { position: "bottom" } },
-          },
-        });
+              options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+          });
 
-        const trendData = calculateTrendData();
-        trendChart = new Chart(trendCtx, {
-          type: "line",
-          data: {
-            labels: trendData.labels,
-            datasets: [
-              {
-                label: "Registros por Día",
-                data: trendData.values,
-                borderColor: "#3B82F6",
-                backgroundColor: "rgba(59, 130, 246, 0.1)",
-                borderWidth: 2,
-                fill: true,
-                tension: 0.4,
+          const trendData = calculateTrendData();
+          trendChart = new Chart(trendCtx, {
+              type: 'line',
+              data: {
+                  labels: trendData.labels,
+                  datasets: [{
+                      label: 'Registros por Día',
+                      data: trendData.values,
+                      borderColor: '#3B82F6',
+                      backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                      borderWidth: 2,
+                      fill: true,
+                      tension: 0.4
+                  }]
               },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
-          },
-        });
+              options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: { legend: { display: false } },
+                  scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+              }
+          });
       }
 
       // Calculate category totals
       function calculateCategoryTotals() {
-        const totals = {
-          Acopladores: 0,
-          Conectores: 0,
-          Divisores: 0,
-          Fibra: 0,
-          Otros: 0,
-          "Patch Cord": 0,
-          Tirrajes: 0,
-          Varios: 0,
-        };
-        materialesData.forEach((item) => {
-          totals["Acopladores"] +=
-            (item.acopladorAPC || 0) + (item.acopladorUPC || 0);
-          totals["Conectores"] +=
-            (item.conectorAPC || 0) + (item.conectorUPC || 0);
-          totals["Divisores"] +=
-            (item.divisor1x16 || 0) + (item.divisor1x8 || 0);
-          totals["Fibra"] += item.fibraDrop1F || 0;
-          totals["Otros"] +=
-            (item.grapas || 0) + (item.termos || 0) + (item.onu || 0);
-          totals["Patch Cord"] += (item.ptcAA || 0) + (item.ptcVA || 0);
-          totals["Tirrajes"] +=
-            (item.tirrapG || 0) + (item.tirrapM || 0) + (item.tirrapP || 0);
-          totals["Varios"] +=
-            (item.onuRoseta || 0) +
-            (item.roseta || 0) +
-            (item.servilletas || 0) +
-            (item.cintaDobleFace || 0) +
-            (item.teipe || 0) +
-            (item.tirro || 0);
-        });
-        return totals;
+          const totals = {
+              'Acopladores': 0, 'Conectores': 0, 'Divisores': 0, 'Fibra': 0,
+              'Otros': 0, 'Patch Cord': 0, 'Tirrajes': 0, 'Varios': 0
+          };
+          materialesData.forEach(item => {
+              totals['Acopladores'] += (item.acopladorAPC || 0) + (item.acopladorUPC || 0);
+              totals['Conectores'] += (item.conectorAPC || 0) + (item.conectorUPC || 0);
+              totals['Divisores'] += (item.divisor1x16 || 0) + (item.divisor1x8 || 0);
+              totals['Fibra'] += item.fibraDrop1F || 0;
+              totals['Otros'] += (item.grapas || 0) + (item.termos || 0) + (item.onu || 0);
+              totals['Patch Cord'] += (item.ptcAA || 0) + (item.ptcVA || 0);
+              totals['Tirrajes'] += (item.tirrapG || 0) + (item.tirrapM || 0) + (item.tirrapP || 0);
+              totals['Varios'] += (item.onuRoseta || 0) + (item.roseta || 0) + (item.servilletas || 0) +
+                                 (item.cintaDobleFace || 0) + (item.teipe || 0) + (item.tirro || 0);
+          });
+          return totals;
       }
-
       // Calculate trend data
       function calculateTrendData() {
-        const dateGroups = {};
-        materialesData.forEach((item) => {
-          dateGroups[item.fecha] = (dateGroups[item.fecha] || 0) + 1;
-        });
-        const sortedDates = Object.keys(dateGroups).sort();
-        const values = sortedDates.map((date) => dateGroups[date]);
-        return { labels: sortedDates, values: values };
+          const dateGroups = {};
+          materialesData.forEach(item => {
+              dateGroups[item.fecha] = (dateGroups[item.fecha] || 0) + 1;
+          });
+          const sortedDates = Object.keys(dateGroups).sort();
+          const values = sortedDates.map(date => dateGroups[date]);
+          return { labels: sortedDates, values: values };
       }
 
       // Form handling
       function handleFormSubmit(e) {
-        e.preventDefault();
-        const newRecord = {
-          id: editingId || Date.now().toString(), // Usa el ID si está editando
-          codigo: document.getElementById("codigo").value,
-          fecha: document.getElementById("fecha").value,
-          acopladorAPC:
-            parseInt(document.getElementById("acopladorAPC").value) || 0,
-          acopladorUPC:
-            parseInt(document.getElementById("acopladorUPC").value) || 0,
-          conectorAPC:
-            parseInt(document.getElementById("conectorAPC").value) || 0,
-          conectorUPC:
-            parseInt(document.getElementById("conectorUPC").value) || 0,
-          divisor1x16:
-            parseInt(document.getElementById("divisor1x16").value) || 0,
-          divisor1x8:
-            parseInt(document.getElementById("divisor1x8").value) || 0,
-          fibraDrop1F:
-            parseInt(document.getElementById("fibraDrop1F").value) || 0,
-          grapas: parseInt(document.getElementById("grapas").value) || 0,
-          termos: parseInt(document.getElementById("termos").value) || 0,
-          onu: parseInt(document.getElementById("onu").value) || 0,
-          ptcAA: parseInt(document.getElementById("ptcAA").value) || 0,
-          ptcVA: parseInt(document.getElementById("ptcVA").value) || 0,
-          onuRoseta: parseInt(document.getElementById("onuRoseta").value) || 0,
-          roseta: parseInt(document.getElementById("roseta").value) || 0,
-          servilletas:
-            parseInt(document.getElementById("servilletas").value) || 0,
-          cintaDobleFace:
-            parseInt(document.getElementById("cintaDobleFace").value) || 0,
-          teipe: parseInt(document.getElementById("teipe").value) || 0,
-          tirro: parseInt(document.getElementById("tirro").value) || 0,
-          tirrapG: parseInt(document.getElementById("tirrapG").value) || 0,
-          tirrapM: parseInt(document.getElementById("tirrapM").value) || 0,
-          tirrapP: parseInt(document.getElementById("tirrapP").value) || 0,
-        };
-        if (editingId) {
-          // ✅ Actualizar registro existente
-          const index = materialesData.findIndex(
-            (item) => item.id === editingId
-          );
-          if (index !== -1) {
-            materialesData[index] = newRecord;
-          }
-          editingId = null; // Limpiar estado
-        } else {
-          // ✅ Nuevo registro
-          materialesData.unshift(newRecord);
-        }
+          e.preventDefault();
+          const newRecord = {
+              id: editingId || Date.now().toString(),
+              codigo: document.getElementById('codigo').value,
+              fecha: document.getElementById('fecha').value,
+              acopladorAPC: parseInt(document.getElementById('acopladorAPC').value) || 0,
+              acopladorUPC: parseInt(document.getElementById('acopladorUPC').value) || 0,
+              conectorAPC: parseInt(document.getElementById('conectorAPC').value) || 0,
+              conectorUPC: parseInt(document.getElementById('conectorUPC').value) || 0,
+              divisor1x16: parseInt(document.getElementById('divisor1x16').value) || 0,
+              divisor1x8: parseInt(document.getElementById('divisor1x8').value) || 0,
+              fibraDrop1F: parseInt(document.getElementById('fibraDrop1F').value) || 0,
+              grapas: parseInt(document.getElementById('grapas').value) || 0,
+              termos: parseInt(document.getElementById('termos').value) || 0,
+              onu: parseInt(document.getElementById('onu').value) || 0,
+              ptcAA: parseInt(document.getElementById('ptcAA').value) || 0,
+              ptcVA: parseInt(document.getElementById('ptcVA').value) || 0,
+              onuRoseta: parseInt(document.getElementById('onuRoseta').value) || 0,
+              roseta: parseInt(document.getElementById('roseta').value) || 0,
+              servilletas: parseInt(document.getElementById('servilletas').value) || 0,
+              cintaDobleFace: parseInt(document.getElementById('cintaDobleFace').value) || 0,
+              teipe: parseInt(document.getElementById('teipe').value) || 0,
+              tirro: parseInt(document.getElementById('tirro').value) || 0,
+              tirrapG: parseInt(document.getElementById('tirrapG').value) || 0,
+              tirrapM: parseInt(document.getElementById('tirrapM').value) || 0,
+              tirrapP: parseInt(document.getElementById('tirrapP').value) || 0
+          };
 
-        updateDashboard();
-        updateCharts();
-        clearForm();
-        showMessage("Registro guardado exitosamente", "success");
-        document.querySelector('[data-tab="dashboard"]').click();
+          if (editingId) {
+              // Actualizar
+              materialesCollection.doc(editingId).set(newRecord)
+                  .then(() => {
+                      editingId = null;
+                      clearForm();
+                      showMessage('Registro actualizado', 'success');
+                      document.querySelector('[data-tab="dashboard"]').click();
+                  })
+                  .catch(error => {
+                      console.error("Error al actualizar: ", error);
+                      showMessage('Error al actualizar: ' + error.message, 'error');
+                  });
+          } else {
+              // Nuevo
+              materialesCollection.add(newRecord)
+                  .then(() => {
+                      clearForm();
+                      showMessage('Registro guardado exitosamente', 'success');
+                      document.querySelector('[data-tab="dashboard"]').click();
+                  })
+                  .catch(error => {
+                      console.error("Error al guardar: ", error);
+                      showMessage('Error al guardar: ' + error.message, 'error');
+                  });
+          }
       }
-      materialesCollection
-        .add(newRecord)
-        .then(() => {
+
+      // Clear form and return to dashboard
+      function clearFormAndReturn() {
           clearForm();
-          showMessage("Registro guardado exitosamente", "success");
           document.querySelector('[data-tab="dashboard"]').click();
-        })
-        .catch((error) => {
-          console.error("Error al guardar: ", error);
-          showMessage("Error al guardar: " + error.message, "error");
-        });
+      }
 
       // Clear form
       function clearForm() {
-        document.getElementById("materialForm").reset();
-        setTodayDate();
-        editingId = null; // ✅ Resetear al limpiar
+          document.getElementById('materialForm').reset();
+          setTodayDate();
+          editingId = null;
       }
 
       // Update charts
       function updateCharts() {
-        if (categoryChart) {
-          const categoryData = calculateCategoryTotals();
-          categoryChart.data.labels = Object.keys(categoryData);
-          categoryChart.data.datasets[0].data = Object.values(categoryData);
-          categoryChart.update();
-        }
-        if (trendChart) {
-          const trendData = calculateTrendData();
-          trendChart.data.labels = trendData.labels;
-          trendChart.data.datasets[0].data = trendData.values;
-          trendChart.update();
-        }
+          if (categoryChart) {
+              const categoryData = calculateCategoryTotals();
+              categoryChart.data.labels = Object.keys(categoryData);
+              categoryChart.data.datasets[0].data = Object.values(categoryData);
+              categoryChart.update();
+          }
+          if (trendChart) {
+              const trendData = calculateTrendData();
+              trendChart.data.labels = trendData.labels;
+              trendChart.data.datasets[0].data = trendData.values;
+              trendChart.update();
+          }
       }
 
       // Filter data
       function filterData() {
-        updateTable();
+          updateTable();
       }
 
       // Edit record
-      let editingId = null; // Variable global para saber si estamos editando
-
       function editRecord(id) {
-        const record = materialesData.find((item) => item.id === id);
-        if (record) {
-          Object.keys(record).forEach((key) => {
-            const element = document.getElementById(key);
-            if (element) element.value = record[key];
-          });
-          // ✅ Guardamos el ID que se está editando
-          editingId = id;
-          document.querySelector('[data-tab="registro"]').click();
-          // ❌ NO eliminamos el registro aquí
-        }
+          const record = materialesData.find(item => item.id === id);
+          if (record) {
+              Object.keys(record).forEach(key => {
+                  const element = document.getElementById(key);
+                  if (element) element.value = record[key];
+              });
+              editingId = id;
+              document.querySelector('[data-tab="registro"]').click();
+          }
       }
 
       // Delete record
       function deleteRecord(id) {
-        if (confirm("¿Estás seguro de que quieres eliminar este registro?")) {
-          materialesCollection
-            .doc(id)
-            .delete()
-            .then(() => showMessage("Registro eliminado", "success"))
-            .catch((error) =>
-              showMessage("Error al eliminar: " + error.message, "error")
-            );
-        }
+          if (confirm('¿Estás seguro de que quieres eliminar este registro?')) {
+              materialesCollection.doc(id).delete()
+                  .then(() => showMessage('Registro eliminado', 'success'))
+                  .catch(error => showMessage('Error al eliminar: ' + error.message, 'error'));
+          }
       }
 
       // Import data
       function processImport() {
-        const importData = document.getElementById("importData").value;
-        if (!importData.trim()) {
-          showMessage("Por favor ingresa los datos a importar", "error");
-          return;
-        }
-        const lines = importData.trim().split("\n");
-        let importedCount = 0;
-        lines.forEach((line, index) => {
-          const values = line.split(",");
-          if (values.length >= 22) {
-            const record = {
-              codigo: values[0] || "",
-              acopladorAPC: parseInt(values[1]) || 0,
-              acopladorUPC: parseInt(values[2]) || 0,
-              conectorAPC: parseInt(values[3]) || 0,
-              conectorUPC: parseInt(values[4]) || 0,
-              divisor1x16: parseInt(values[5]) || 0,
-              divisor1x8: parseInt(values[6]) || 0,
-              fibraDrop1F: parseInt(values[7]) || 0,
-              grapas: parseInt(values[8]) || 0,
-              termos: parseInt(values[9]) || 0,
-              onu: parseInt(values[10]) || 0,
-              ptcAA: parseInt(values[11]) || 0,
-              ptcVA: parseInt(values[12]) || 0,
-              onuRoseta: parseInt(values[13]) || 0,
-              roseta: parseInt(values[14]) || 0,
-              servilletas: parseInt(values[15]) || 0,
-              cintaDobleFace: parseInt(values[16]) || 0,
-              teipe: parseInt(values[17]) || 0,
-              tirro: parseInt(values[18]) || 0,
-              tirrapG: parseInt(values[19]) || 0,
-              tirrapM: parseInt(values[20]) || 0,
-              tirrapP: parseInt(values[21]) || 0,
-              fecha: formatDate(values[22]),
-            };
-            materialesCollection.add(record).then(() => importedCount++);
+          const importData = document.getElementById('importData').value;
+          if (!importData.trim()) {
+              showMessage('Por favor ingresa los datos a importar', 'error');
+              return;
           }
-        });
-        setTimeout(() => {
-          document.getElementById("importData").value = "";
-          showMessage(`${importedCount} registros importados`, "success");
-        }, 1000);
+          const lines = importData.trim().split('\n');
+          let importedCount = 0;
+          lines.forEach((line, index) => {
+              const values = line.split(',');
+              if (values.length >= 22) {
+                  const record = {
+                      id: Date.now().toString() + index,
+                      codigo: values[0] || '',
+                      acopladorAPC: parseInt(values[1]) || 0,
+                      acopladorUPC: parseInt(values[2]) || 0,
+                      conectorAPC: parseInt(values[3]) || 0,
+                      conectorUPC: parseInt(values[4]) || 0,
+                      divisor1x16: parseInt(values[5]) || 0,
+                      divisor1x8: parseInt(values[6]) || 0,
+                      fibraDrop1F: parseInt(values[7]) || 0,
+                      grapas: parseInt(values[8]) || 0,
+                      termos: parseInt(values[9]) || 0,
+                      onu: parseInt(values[10]) || 0,
+                      ptcAA: parseInt(values[11]) || 0,
+                      ptcVA: parseInt(values[12]) || 0,
+                      onuRoseta: parseInt(values[13]) || 0,
+                      roseta: parseInt(values[14]) || 0,
+                      servilletas: parseInt(values[15]) || 0,
+                      cintaDobleFace: parseInt(values[16]) || 0,
+                      teipe: parseInt(values[17]) || 0,
+                      tirro: parseInt(values[18]) || 0,
+                      tirrapG: parseInt(values[19]) || 0,
+                      tirrapM: parseInt(values[20]) || 0,
+                      tirrapP: parseInt(values[21]) || 0,
+                      fecha: formatDate(values[22])
+                  };
+                  materialesCollection.add(record).then(() => importedCount++);
+              }
+          });
+          setTimeout(() => {
+              document.getElementById('importData').value = '';
+              showMessage(`${importedCount} registros importados`, 'success');
+          }, 1000);
       }
 
       // Format date from DD/MM/YYYY to YYYY-MM-DD
       function formatDate(dateStr) {
-        const parts = dateStr.split("/");
-        return parts.length === 3
-          ? `${parts[2]}-${parts[1]}-${parts[0]}`
-          : new Date().toISOString().split("T")[0];
+          const parts = dateStr.split('/');
+          return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : new Date().toISOString().split('T')[0];
       }
 
       // Generate report
       function generateReport() {
-        const startDate = document.getElementById("reportStartDate").value;
-        const endDate = document.getElementById("reportEndDate").value;
-        if (!startDate || !endDate) {
-          showMessage("Selecciona el rango de fechas", "error");
-          return;
-        }
-        const filteredData = materialesData.filter(
-          (item) => item.fecha >= startDate && item.fecha <= endDate
-        );
-        updateReportCharts(filteredData);
-        showMessage("Reporte generado", "success");
+          const startDate = document.getElementById('reportStartDate').value;
+          const endDate = document.getElementById('reportEndDate').value;
+          if (!startDate || !endDate) {
+              showMessage('Selecciona el rango de fechas', 'error');
+              return;
+          }
+          const filteredData = materialesData.filter(item => item.fecha >= startDate && item.fecha <= endDate);
+          updateReportCharts(filteredData);
+          showMessage('Reporte generado', 'success');
       }
 
       // Update report charts
       function updateReportCharts(data) {
-        const categoryTotals = calculateCategoryTotalsForData(data);
-        if (reportCategoryChart) reportCategoryChart.destroy();
-        const reportCategoryCtx = document.getElementById(
-          "reportCategoryChart"
-        );
-        reportCategoryChart = new Chart(reportCategoryCtx, {
-          type: "bar",
-          data: {
-            labels: Object.keys(categoryTotals),
-            datasets: [
-              {
-                label: "Total Consumido",
-                data: Object.values(categoryTotals),
-                backgroundColor: "#3B82F6",
-                borderColor: "#1E40AF",
-                borderWidth: 1,
+          const categoryTotals = calculateCategoryTotalsForData(data);
+          if (reportCategoryChart) reportCategoryChart.destroy();
+          const reportCategoryCtx = document.getElementById('reportCategoryChart');
+          reportCategoryChart = new Chart(reportCategoryCtx, {
+              type: 'bar',
+              data: {
+                  labels: Object.keys(categoryTotals),
+                  datasets: [{
+                      label: 'Total Consumido',
+                      data: Object.values(categoryTotals),
+                      backgroundColor: '#3B82F6',
+                      borderColor: '#1E40AF',
+                      borderWidth: 1
+                  }]
               },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-          },
-        });
+              options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+          });
 
-        const timeData = calculateTimeDataForData(data);
-        if (reportTimeChart) reportTimeChart.destroy();
-        const reportTimeCtx = document.getElementById("reportTimeChart");
-        reportTimeChart = new Chart(reportTimeCtx, {
-          type: "line",
-          data: {
-            labels: timeData.labels,
-            datasets: [
-              {
-                label: "Registros por Día",
-                data: timeData.values,
-                borderColor: "#10B981",
-                backgroundColor: "rgba(16, 185, 129, 0.1)",
-                borderWidth: 2,
-                fill: true,
-                tension: 0.4,
+          const timeData = calculateTimeDataForData(data);
+          if (reportTimeChart) reportTimeChart.destroy();
+          const reportTimeCtx = document.getElementById('reportTimeChart');
+          reportTimeChart = new Chart(reportTimeCtx, {
+              type: 'line',
+              data: {
+                  labels: timeData.labels,
+                  datasets: [{
+                      label: 'Registros por Día',
+                      data: timeData.values,
+                      borderColor: '#10B981',
+                      backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                      borderWidth: 2,
+                      fill: true,
+                      tension: 0.4
+                  }]
               },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-          },
-        });
+              options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+          });
       }
 
       // Calculate category totals for specific data
       function calculateCategoryTotalsForData(data) {
-        const totals = {
-          Acopladores: 0,
-          Conectores: 0,
-          Divisores: 0,
-          Fibra: 0,
-          Otros: 0,
-          "Patch Cord": 0,
-          Tirrajes: 0,
-          Varios: 0,
-        };
-        data.forEach((item) => {
-          totals["Acopladores"] +=
-            (item.acopladorAPC || 0) + (item.acopladorUPC || 0);
-          totals["Conectores"] +=
-            (item.conectorAPC || 0) + (item.conectorUPC || 0);
-          totals["Divisores"] +=
-            (item.divisor1x16 || 0) + (item.divisor1x8 || 0);
-          totals["Fibra"] += item.fibraDrop1F || 0;
-          totals["Otros"] +=
-            (item.grapas || 0) + (item.termos || 0) + (item.onu || 0);
-          totals["Patch Cord"] += (item.ptcAA || 0) + (item.ptcVA || 0);
-          totals["Tirrajes"] +=
-            (item.tirrapG || 0) + (item.tirrapM || 0) + (item.tirrapP || 0);
-          totals["Varios"] +=
-            (item.onuRoseta || 0) +
-            (item.roseta || 0) +
-            (item.servilletas || 0) +
-            (item.cintaDobleFace || 0) +
-            (item.teipe || 0) +
-            (item.tirro || 0);
-        });
-        return totals;
+          const totals = { 'Acopladores': 0, 'Conectores': 0, 'Divisores': 0, 'Fibra': 0, 'Otros': 0, 'Patch Cord': 0, 'Tirrajes': 0, 'Varios': 0 };
+          data.forEach(item => {
+              totals['Acopladores'] += (item.acopladorAPC || 0) + (item.acopladorUPC || 0);
+              totals['Conectores'] += (item.conectorAPC || 0) + (item.conectorUPC || 0);
+              totals['Divisores'] += (item.divisor1x16 || 0) + (item.divisor1x8 || 0);
+              totals['Fibra'] += item.fibraDrop1F || 0;
+              totals['Otros'] += (item.grapas || 0) + (item.termos || 0) + (item.onu || 0);
+              totals['Patch Cord'] += (item.ptcAA || 0) + (item.ptcVA || 0);
+              totals['Tirrajes'] += (item.tirrapG || 0) + (item.tirrapM || 0) + (item.tirrapP || 0);
+              totals['Varios'] += (item.onuRoseta || 0) + (item.roseta || 0) + (item.servilletas || 0) +
+                                 (item.cintaDobleFace || 0) + (item.teipe || 0) + (item.tirro || 0);
+          });
+          return totals;
       }
 
       // Calculate time data for specific data
       function calculateTimeDataForData(data) {
-        const dateGroups = {};
-        data.forEach((item) => {
-          dateGroups[item.fecha] = (dateGroups[item.fecha] || 0) + 1;
-        });
-        const sortedDates = Object.keys(dateGroups).sort();
-        const values = sortedDates.map((date) => dateGroups[date]);
-        return { labels: sortedDates, values: values };
+          const dateGroups = {};
+          data.forEach(item => { dateGroups[item.fecha] = (dateGroups[item.fecha] || 0) + 1; });
+          const sortedDates = Object.keys(dateGroups).sort();
+          const values = sortedDates.map(date => dateGroups[date]);
+          return { labels: sortedDates, values: values };
       }
 
       // Export to PDF
       function exportToPDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        doc.setFontSize(20);
-        doc.text("Reporte de Materiales ThunderNet", 20, 20);
-        doc.setFontSize(12);
-        doc.text("Fecha: " + new Date().toLocaleDateString(), 20, 30);
-        let y = 50;
-        doc.text("Resumen:", 20, y);
-        y += 10;
-        const categoryTotals = calculateCategoryTotals();
-        Object.entries(categoryTotals).forEach(([k, v]) => {
-          doc.text(`${k}: ${v}`, 25, y);
-          y += 8;
-        });
-        y += 10;
-        doc.text("Detalles:", 20, y);
-        y += 10;
-        materialesData.slice(0, 20).forEach((item) => {
-          if (y > 270) {
-            doc.addPage();
-            y = 20;
-          }
-          doc.text(
-            `${item.codigo} - ${item.fecha} - Fibra: ${item.fibraDrop1F}m`,
-            25,
-            y
-          );
-          y += 8;
-        });
-        doc.save("reporte_materiales_thundernet.pdf");
-        showMessage("PDF exportado", "success");
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF();
+          doc.setFontSize(20);
+          doc.text('Reporte de Materiales ThunderNet', 20, 20);
+          doc.setFontSize(12);
+          doc.text('Fecha: ' + new Date().toLocaleDateString(), 20, 30);
+          let y = 50;
+          doc.text('Resumen:', 20, y); y += 10;
+          const categoryTotals = calculateCategoryTotals();
+          Object.entries(categoryTotals).forEach(([k, v]) => {
+              doc.text(`${k}: ${v}`, 25, y);
+              y += 8;
+          });
+          y += 10;
+          doc.text('Detalles:', 20, y); y += 10;
+          materialesData.slice(0, 20).forEach(item => {
+              if (y > 270) { doc.addPage(); y = 20; }
+              doc.text(`${item.codigo} - ${item.fecha} - Fibra: ${item.fibraDrop1F}m`, 25, y);
+              y += 8;
+          });
+          doc.save('reporte_materiales_thundernet.pdf');
+          showMessage('PDF exportado', 'success');
       }
 
       // Export to CSV
       function exportToCSV() {
-        const headers = [
-          "Código",
-          "Fecha",
-          "Acoplador APC",
-          "Acoplador UPC",
-          "Conector APC",
-          "Conector UPC",
-          "Divisor 1x16",
-          "Divisor 1x8",
-          "Fibra Drop 1F",
-          "Grapas",
-          "Termos",
-          "ONU",
-          "PTC AA",
-          "PTC VA",
-          "ONU Roseta",
-          "Roseta",
-          "Servilletas",
-          "Cinta Doble Face",
-          "Teipe",
-          "Tirro",
-          "Tirrap G",
-          "Tirrap M",
-          "Tirrap P",
-        ];
-        const csvContent = [
-          headers.join(","),
-          ...materialesData.map((item) =>
-            [
-              item.codigo,
-              item.fecha,
-              item.acopladorAPC,
-              item.acopladorUPC,
-              item.conectorAPC,
-              item.conectorUPC,
-              item.divisor1x16,
-              item.divisor1x8,
-              item.fibraDrop1F,
-              item.grapas,
-              item.termos,
-              item.onu,
-              item.ptcAA,
-              item.ptcVA,
-              item.onuRoseta,
-              item.roseta,
-              item.servilletas,
-              item.cintaDobleFace,
-              item.teipe,
-              item.tirro,
-              item.tirrapG,
-              item.tirrapM,
-              item.tirrapP,
-            ].join(",")
-          ),
-        ].join("\n");
-        const blob = new Blob([csvContent], { type: "text/csv" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "materiales_thundernet.csv";
-        a.click();
-        URL.revokeObjectURL(url);
-        showMessage("CSV exportado", "success");
+          const headers = [
+              'Código', 'Fecha', 'Acoplador APC', 'Acoplador UPC', 'Conector APC', 'Conector UPC',
+              'Divisor 1x16', 'Divisor 1x8', 'Fibra Drop 1F', 'Grapas', 'Termos', 'ONU',
+              'PTC AA', 'PTC VA', 'ONU Roseta', 'Roseta', 'Servilletas', 'Cinta Doble Face',
+              'Teipe', 'Tirro', 'Tirrap G', 'Tirrap M', 'Tirrap P'
+          ];
+          const csvContent = [
+              headers.join(','),
+              ...materialesData.map(item => [
+                  item.codigo, item.fecha, item.acopladorAPC, item.acopladorUPC,
+                  item.conectorAPC, item.conectorUPC, item.divisor1x16, item.divisor1x8,
+                  item.fibraDrop1F, item.grapas, item.termos, item.onu,
+                  item.ptcAA, item.ptcVA, item.onuRoseta, item.roseta,
+                  item.servilletas, item.cintaDobleFace, item.teipe, item.tirro,
+                  item.tirrapG, item.tirrapM, item.tirrapP
+              ].join(','))
+          ].join('\n');
+          const blob = new Blob([csvContent], { type: 'text/csv' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'materiales_thundernet.csv';
+          a.click();
+          URL.revokeObjectURL(url);
+          showMessage('CSV exportado', 'success');
       }
 
       // Show message
       function showMessage(message, type) {
-        const container = document.getElementById("messageContainer");
-        const msg = document.createElement("div");
-        const bgColor = type === "success" ? "bg-green-500" : "bg-red-500";
-        msg.className = `${bgColor} text-white px-4 py-2 rounded-lg shadow-lg mb-2 flex items-center`;
-        msg.innerHTML = `<i class="fas fa-${
-          type === "success" ? "check" : "exclamation"
-        }-circle mr-2"></i>${message}`;
-        container.appendChild(msg);
-        setTimeout(() => msg.remove(), 3000);
+          const container = document.getElementById('messageContainer');
+          const msg = document.createElement('div');
+          const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+          msg.className = `${bgColor} text-white px-4 py-2 rounded-lg shadow-lg mb-2 flex items-center`;
+          msg.innerHTML = `<i class="fas fa-${type === 'success' ? 'check' : 'exclamation'}-circle mr-2"></i>${message}`;
+          container.appendChild(msg);
+          setTimeout(() => msg.remove(), 3000);
       }
     </script>
   </body>
