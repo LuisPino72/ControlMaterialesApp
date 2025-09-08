@@ -1133,8 +1133,8 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
             .doc(id)
             .delete()
             .then(() => {
+              // ✅ Eliminación exitosa: el onSnapshot se encargará de actualizar la UI
               showMessage("Registro eliminado exitosamente", "success");
-              // No necesitas actualizar manualmente materialesData, el onSnapshot lo hará automáticamente
             })
             .catch((error) => {
               console.error("Error al eliminar el registro: ", error);
@@ -1404,13 +1404,11 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
                 if (material === "FIBRA DROP 1F")
                   return sum + (item.fibraDrop1F || 0);
                 if (material === "GRAPAS") return sum + (item.grapas || 0);
-                if (material === "M.TERMICO")
-                  return sum + (item.termos || 0);
+                if (material === "M.TERMICO") return sum + (item.termos || 0);
                 if (material === "ONU GPON") return sum + (item.onu || 0);
                 if (material === "PATCH UPC-UPC")
                   return sum + (item.ptcAA || 0);
-                if (material === "PC-3M-SC-UPC")
-                  return sum + (item.ptcVA || 0);
+                if (material === "PC-3M-SC-UPC") return sum + (item.ptcVA || 0);
                 if (material === "ROSETA") return sum + (item.roseta || 0);
                 if (material === "SERVILLETAS")
                   return sum + (item.servilletas || 0);
