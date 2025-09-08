@@ -1127,13 +1127,12 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
 
       // Delete record
       function deleteRecord(id) {
+        console.log("ID a eliminar:", id); // 🔍 Agrega esta línea para depurar
         if (confirm("¿Estás seguro de que quieres eliminar este registro?")) {
-          // Eliminar de Firestore usando el ID real del documento
           materialesCollection
             .doc(id)
             .delete()
             .then(() => {
-              // ✅ Eliminación exitosa: el onSnapshot se encargará de actualizar la UI
               showMessage("Registro eliminado exitosamente", "success");
             })
             .catch((error) => {
