@@ -133,21 +133,6 @@
               </div>
             </div>
           </div>
-          <!-- Botón temporal de migración -->
-          <div
-            class="mt-6 p-4 bg-yellow-50 border border-yellow-300 rounded-lg"
-          >
-            <button
-              onclick="migrateOldRecords()"
-              class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-md"
-            >
-              <i class="fas fa-sync mr-2"></i>Corregir IDs Antiguos
-            </button>
-            <p class="text-yellow-800 text-sm mt-2">
-              ⚠️ Solo necesario ejecutar una vez. Corrige registros creados
-              antes de la actualización.
-            </p>
-          </div>
         </div>
         <!-- Charts -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -827,42 +812,6 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
             showMessage("Error al conectar con Firebase", "error");
           }
         );
-      }
-
-      // 🔁 FUNCIÓN DE MIGRACIÓN: Corrige los IDs de los registros viejos
-      async function migrateOldRecords() {
-        if (
-          !confirm(
-            "¿Quieres corregir los IDs de los registros antiguos? Esto puede tardar unos segundos."
-          )
-        ) {
-          return;
-        }
-
-        try {
-          const snapshot = await materialesCollection.get();
-          let updatedCount = 0;
-
-          for (const doc of snapshot.docs) {
-            const data = doc.data();
-            // Si el campo 'id' es diferente del ID real del documento, lo actualizamos
-            if (data.id !== doc.id) {
-              await doc.ref.update({ id: doc.id });
-              updatedCount++;
-            }
-          }
-
-          showMessage(
-            `Migración completada: ${updatedCount} registros actualizados`,
-            "success"
-          );
-          console.log(
-            `✅ Migración completada: ${updatedCount} registros corregidos`
-          );
-        } catch (error) {
-          console.error("Error durante la migración: ", error);
-          showMessage("Error en la migración: " + error.message, "error");
-        }
       }
 
       // Update dashboard statistics
