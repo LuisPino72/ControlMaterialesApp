@@ -1314,36 +1314,146 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
       }
 
       // Export to PDF
+      // Export to PDF (Modified)
       function exportToPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
+
+        // Título del reporte
         doc.setFontSize(20);
         doc.text("Reporte de Materiales ThunderNet", 20, 20);
         doc.setFontSize(12);
         doc.text("Fecha: " + new Date().toLocaleDateString(), 20, 30);
-        let y = 50;
-        doc.text("Resumen:", 20, y);
-        y += 10;
-        const categoryTotals = calculateCategoryTotals();
-        Object.entries(categoryTotals).forEach(([k, v]) => {
-          doc.text(`${k}: ${v}`, 25, y);
-          y += 8;
+
+        // Obtener todos los códigos únicos
+        const codigoSet = new Set(materialesData.map((item) => item.codigo));
+        const codigos = Array.from(codigoSet).sort(); // Ordenar códigos
+
+        // Definir materiales según tu lista
+        const materiales = [
+          "ACOPLADOR APC",
+          "ACOPLADOR UPC",
+          "CONECTORES APC",
+          "CONECTORES UPC",
+          "DIVISOR 1 X 16",
+          "DIVISOR 1 X 8",
+          "FIBRA DROP 1F (Mts)",
+          "GRAPAS",
+          "MANGUITO TERMICO",
+          "ONU GPON",
+          "PATCH CORD UPC-UPC",
+          "PC-3M-SC-UPC-SC-APC-205",
+          "ROSETA",
+          "SERVILLETAS",
+          "CINTA DOBLE FACE",
+          "TEIPE",
+          "TIRRO",
+          "TIRRAJE Grande",
+          "TIRRAJE Mediano",
+          "TIRRAJE Pequeño",
+        ];
+
+        // Coordenadas iniciales
+        let startY = 40;
+        const marginX = 20;
+        const cellWidth = 20; // Ancho de cada columna
+        const cellHeight = 8;
+
+        // Encabezados de tabla
+        doc.setFontSize(10);
+        doc.text("Materiales", marginX, startY);
+        codigos.forEach((codigo, index) => {
+          const x = marginX + (index + 1) * cellWidth;
+          doc.text(codigo, x, startY);
         });
-        y += 10;
-        doc.text("Detalles:", 20, y);
-        y += 10;
-        materialesData.slice(0, 20).forEach((item) => {
-          if (y > 270) {
-            doc.addPage();
-            y = 20;
-          }
-          doc.text(
-            `${item.codigo} - ${item.fecha} - Fibra: ${item.fibraDrop1F}m`,
-            25,
-            y
+
+        // Dibujar líneas horizontales
+        const lineY = startY + cellHeight;
+        doc.setLineWidth(0.1);
+        doc.line(
+          marginX,
+          lineY,
+          marginX + (codigos.length + 1) * cellWidth,
+          lineY
+        );
+
+        // Llenar datos por material
+        materiales.forEach((material, i) => {
+          const y = startY + (i + 1) * cellHeight;
+          doc.text(material, marginX, y);
+
+          codigos.forEach((codigo, j) => {
+            const x = marginX + (j + 1) * cellWidth;
+            const total = materialesData
+              .filter((item) => item.codigo === codigo)
+              .reduce((sum, item) => {
+                // Mapeo de campos según nombre de material
+                if (material === "ACOPLADOR APC")
+                  return sum + (item.acopladorAPC || 0);
+                if (material === "ACOPLADOR UPC")
+                  return sum + (item.acopladorUPC || 0);
+                if (material === "CONECTORES APC")
+                  return sum + (item.conectorAPC || 0);
+                if (material === "CONECTORES UPC")
+                  return sum + (item.conectorUPC || 0);
+                if (material === "DIVISOR 1 X 16")
+                  return sum + (item.divisor1x16 || 0);
+                if (material === "DIVISOR 1 X 8")
+                  return sum + (item.divisor1x8 || 0);
+                if (material === "FIBRA DROP 1F (Mts)")
+                  return sum + (item.fibraDrop1F || 0);
+                if (material === "GRAPAS") return sum + (item.grapas || 0);
+                if (material === "MANGUITO TERMICO")
+                  return sum + (item.termos || 0);
+                if (material === "ONU GPON") return sum + (item.onu || 0);
+                if (material === "PATCH CORD UPC-UPC")
+                  return sum + (item.ptcAA || 0);
+                if (material === "PC-3M-SC-UPC-SC-APC-205")
+                  return sum + (item.ptcVA || 0);
+                if (material === "ROSETA") return sum + (item.roseta || 0);
+                if (material === "SERVILLETAS")
+                  return sum + (item.servilletas || 0);
+                if (material === "CINTA DOBLE FACE")
+                  return sum + (item.cintaDobleFace || 0);
+                if (material === "TEIPE") return sum + (item.teipe || 0);
+                if (material === "TIRRO") return sum + (item.tirro || 0);
+                if (material === "TIRRAJE Grande")
+                  return sum + (item.tirrapG || 0);
+                if (material === "TIRRAJE Mediano")
+                  return sum + (item.tirrapM || 0);
+                if (material === "TIRRAJE Pequeño")
+                  return sum + (item.tirrapP || 0);
+                return sum;
+              }, 0);
+
+            doc.text(total.toString(), x, y);
+          });
+        });
+
+        // Ajustar página si es necesario
+        const totalPages = Math.ceil(
+          ((materiales.length + 1) * cellHeight) /
+            (doc.internal.pageSize.height - 20)
+        );
+        for (let p = 1; p < totalPages; p++) {
+          doc.addPage();
+          // Repetir encabezados si es necesario
+          doc.setFontSize(10);
+          doc.text("Materiales", marginX, startY);
+          codigos.forEach((codigo, index) => {
+            const x = marginX + (index + 1) * cellWidth;
+            doc.text(codigo, x, startY);
+          });
+          doc.setLineWidth(0.1);
+          doc.line(
+            marginX,
+            startY + cellHeight,
+            marginX + (codigos.length + 1) * cellWidth,
+            startY + cellHeight
           );
-          y += 8;
-        });
+        }
+
+        // Guardar archivo
         doc.save("reporte_materiales_thundernet.pdf");
         showMessage("PDF exportado", "success");
       }
