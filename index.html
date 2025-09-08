@@ -1314,27 +1314,26 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
       }
 
       // Export to PDF
-      // Export to PDF (Modified)
       function exportToPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
-        // Título del reporte
+        // Título
         doc.setFontSize(20);
         doc.text("Reporte de Materiales ThunderNet", 20, 20);
         doc.setFontSize(12);
         doc.text("Fecha: " + new Date().toLocaleDateString(), 20, 30);
 
-        // Obtener todos los códigos únicos
+        // Obtener códigos únicos
         const codigoSet = new Set(materialesData.map((item) => item.codigo));
-        const codigos = Array.from(codigoSet).sort(); // Ordenar códigos
+        const codigos = Array.from(codigoSet).sort();
 
-        // Definir materiales según tu lista
+        // Definir materiales
         const materiales = [
           "ACOPLADOR APC",
           "ACOPLADOR UPC",
-          "CONECTORES APC",
-          "CONECTORES UPC",
+          "CONECTOR APC",
+          "CONECTOR UPC",
           "DIVISOR 1 X 16",
           "DIVISOR 1 X 8",
           "FIBRA DROP 1F (Mts)",
@@ -1356,18 +1355,21 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
         // Coordenadas iniciales
         let startY = 40;
         const marginX = 20;
-        const cellWidth = 20; // Ancho de cada columna
-        const cellHeight = 8;
+        const cellWidth = 30; // 🔥 Aumentado de 20 a 30 para evitar superposición
+        const cellHeight = 10; // Más alto para mejor lectura
+        const fontSize = 9; // Fuente más pequeña para caber mejor
+
+        // Configurar fuente
+        doc.setFontSize(fontSize);
 
         // Encabezados de tabla
-        doc.setFontSize(10);
         doc.text("Materiales", marginX, startY);
         codigos.forEach((codigo, index) => {
           const x = marginX + (index + 1) * cellWidth;
           doc.text(codigo, x, startY);
         });
 
-        // Dibujar líneas horizontales
+        // Dibujar línea horizontal debajo del encabezado
         const lineY = startY + cellHeight;
         doc.setLineWidth(0.1);
         doc.line(
@@ -1377,7 +1379,7 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
           lineY
         );
 
-        // Llenar datos por material
+        // Llenar datos
         materiales.forEach((material, i) => {
           const y = startY + (i + 1) * cellHeight;
           doc.text(material, marginX, y);
@@ -1387,14 +1389,13 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
             const total = materialesData
               .filter((item) => item.codigo === codigo)
               .reduce((sum, item) => {
-                // Mapeo de campos según nombre de material
                 if (material === "ACOPLADOR APC")
                   return sum + (item.acopladorAPC || 0);
                 if (material === "ACOPLADOR UPC")
                   return sum + (item.acopladorUPC || 0);
-                if (material === "CONECTORES APC")
+                if (material === "CONECTOR APC")
                   return sum + (item.conectorAPC || 0);
-                if (material === "CONECTORES UPC")
+                if (material === "CONECTOR UPC")
                   return sum + (item.conectorUPC || 0);
                 if (material === "DIVISOR 1 X 16")
                   return sum + (item.divisor1x16 || 0);
@@ -1430,15 +1431,14 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
           });
         });
 
-        // Ajustar página si es necesario
+        // Ajustar páginas si es necesario
         const totalPages = Math.ceil(
           ((materiales.length + 1) * cellHeight) /
             (doc.internal.pageSize.height - 20)
         );
         for (let p = 1; p < totalPages; p++) {
           doc.addPage();
-          // Repetir encabezados si es necesario
-          doc.setFontSize(10);
+          doc.setFontSize(fontSize);
           doc.text("Materiales", marginX, startY);
           codigos.forEach((codigo, index) => {
             const x = marginX + (index + 1) * cellWidth;
