@@ -797,7 +797,6 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
           .split("T")[0];
       }
 
-      // Load data from Firestore
       function loadMaterials() {
         materialesCollection.onSnapshot(
           (snapshot) => {
@@ -1048,7 +1047,7 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
         };
 
         if (editingId) {
-          // Actualizar
+          // Actualizar: Usar el ID real del documento
           materialesCollection
             .doc(editingId)
             .set(newRecord)
@@ -1063,9 +1062,13 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
               showMessage("Error al actualizar: " + error.message, "error");
             });
         } else {
-          // Nuevo
+          // Nuevo: Dejar que Firestore genere el ID, y luego guardarlo en el documento
           materialesCollection
             .add(newRecord)
+            .then((docRef) => {
+              // Actualizar el documento con su propio ID
+              return docRef.update({ id: docRef.id });
+            })
             .then(() => {
               clearForm();
               showMessage("Registro guardado exitosamente", "success");
