@@ -165,7 +165,7 @@
                 <input
                   type="text"
                   id="filterCode"
-                  placeholder="Filtrar por código"
+                  placeholder="Filtrar por Cuadrilla"
                   class="px-3 py-2 border border-gray-300 rounded-md text-sm"
                 />
               </div>
@@ -178,7 +178,7 @@
                   <th
                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
-                    Código
+                    Cuadrilla
                   </th>
                   <th
                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -232,7 +232,7 @@
               >
                 <div>
                   <label class="block text-sm font-semibold text-gray-700 mb-2"
-                    >CÓDIGO</label
+                    >CUADRILLA</label
                   >
                   <input
                     type="text"
@@ -426,6 +426,17 @@
                     <input
                       type="number"
                       id="ptcVA"
+                      min="0"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                      >APC-APC</label
+                    >
+                    <input
+                      type="number"
+                      id="ptcAPC"
                       min="0"
                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
@@ -862,39 +873,46 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
           );
         }
 
+        // Ordenar por fecha descendente (más reciente primero)
+        filteredData = filteredData.sort((a, b) => {
+          if (a.fecha > b.fecha) return -1;
+          if (a.fecha < b.fecha) return 1;
+          return 0;
+        });
+
         tbody.innerHTML = filteredData
           .map(
             (item) => `
-              <tr class="hover:bg-gray-50">
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${
-                    item.codigo
-                  }</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
-                    item.fecha
-                  }</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
-                    (item.acopladorAPC || 0) + (item.acopladorUPC || 0)
-                  }</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
-                    (item.conectorAPC || 0) + (item.conectorUPC || 0)
-                  }</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
-                    item.fibraDrop1F || 0
-                  }</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button onclick="editRecord('${
-                        item.id
-                      }')" class="text-blue-600 hover:text-blue-900 mr-2">
-                          <i class="fas fa-edit"></i>
-                      </button>
-                      <button onclick="deleteRecord('${
-                        item.id
-                      }')" class="text-red-600 hover:text-red-900">
-                          <i class="fas fa-trash"></i>
-                      </button>
-                  </td>
-              </tr>
-          `
+          <tr class="hover:bg-gray-50">
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${
+                item.codigo
+              }</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
+                item.fecha
+              }</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
+                (item.acopladorAPC || 0) + (item.acopladorUPC || 0)
+              }</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
+                (item.conectorAPC || 0) + (item.conectorUPC || 0)
+              }</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
+                item.fibraDrop1F || 0
+              }</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <button onclick="editRecord('${
+                    item.id
+                  }')" class="text-blue-600 hover:text-blue-900 mr-2">
+                      <i class="fas fa-edit"></i>
+                  </button>
+                  <button onclick="deleteRecord('${
+                    item.id
+                  }')" class="text-red-600 hover:text-red-900">
+                      <i class="fas fa-trash"></i>
+                  </button>
+              </td>
+          </tr>
+      `
           )
           .join("");
       }
@@ -982,9 +1000,9 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
           totals["Divisores"] +=
             (item.divisor1x16 || 0) + (item.divisor1x8 || 0);
           totals["Fibra"] += item.fibraDrop1F || 0;
-          totals["Otros"] +=
-            (item.grapas || 0) + (item.termos || 0) + (item.onu || 0);
-          totals["Patch Cord"] += (item.ptcAA || 0) + (item.ptcVA || 0);
+          totals["Otros"] += totals["Patch Cord"] +=
+            (item.ptcAA || 0) + (item.ptcVA || 0) + (item.ptcAPC || 0);
+
           totals["Tirrajes"] +=
             (item.tirrapG || 0) + (item.tirrapM || 0) + (item.tirrapP || 0);
           totals["Varios"] +=
@@ -1033,6 +1051,7 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
           onu: parseInt(document.getElementById("onu").value) || 0,
           ptcAA: parseInt(document.getElementById("ptcAA").value) || 0,
           ptcVA: parseInt(document.getElementById("ptcVA").value) || 0,
+          ptcAPC: parseInt(document.getElementById("ptcAPC").value) || 0,
 
           roseta: parseInt(document.getElementById("roseta").value) || 0,
           servilletas:
@@ -1172,6 +1191,7 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
               onu: parseInt(values[10]) || 0,
               ptcAA: parseInt(values[11]) || 0,
               ptcVA: parseInt(values[12]) || 0,
+              ptcAPC: parseInt(values[13]) || 0,
               roseta: parseInt(values[14]) || 0,
               servilletas: parseInt(values[15]) || 0,
               cintaDobleFace: parseInt(values[16]) || 0,
@@ -1291,7 +1311,8 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
           totals["Fibra"] += item.fibraDrop1F || 0;
           totals["Otros"] +=
             (item.grapas || 0) + (item.termos || 0) + (item.onu || 0);
-          totals["Patch Cord"] += (item.ptcAA || 0) + (item.ptcVA || 0);
+          totals["Patch Cord"] +=
+            (item.ptcAA || 0) + (item.ptcVA || 0) + (item.ptcAPC || 0);
           totals["Tirrajes"] +=
             (item.tirrapG || 0) + (item.tirrapM || 0) + (item.tirrapP || 0);
           totals["Varios"] +=
@@ -1344,6 +1365,7 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
           "ONU GPON",
           "PATCH UPC-UPC",
           "PC-3M-SC-UPC",
+          "PATCH APC-APC",
           "ROSETA",
           "SERVILLETAS",
           "CINTA D.F",
@@ -1411,6 +1433,8 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
                 if (material === "PATCH UPC-UPC")
                   return sum + (item.ptcAA || 0);
                 if (material === "PC-3M-SC-UPC") return sum + (item.ptcVA || 0);
+                if (material === "PATCH APC-APC")
+                  return sum + (item.ptcAPC || 0);
                 if (material === "ROSETA") return sum + (item.roseta || 0);
                 if (material === "SERVILLETAS")
                   return sum + (item.servilletas || 0);
@@ -1475,6 +1499,7 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
           "ONU",
           "PTC AA",
           "PTC VA",
+          "PTC APC",
           "Roseta",
           "Servilletas",
           "Cinta Doble Face",
@@ -1502,6 +1527,7 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
               item.onu,
               item.ptcAA,
               item.ptcVA,
+              item.ptcAPC,
               item.roseta,
               item.servilletas,
               item.cintaDobleFace,
