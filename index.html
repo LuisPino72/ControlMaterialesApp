@@ -14,12 +14,10 @@
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   </head>
   <body class="bg-gray-50 min-h-screen">
-    <!-- Header -->
     <header class="bg-blue-600 text-white shadow-lg">
       <div class="container mx-auto px-4 py-4">
         <div class="flex items-center justify-between">
@@ -32,7 +30,6 @@
         </div>
       </div>
     </header>
-    <!-- Navigation Tabs -->
     <nav class="bg-white shadow-sm border-b">
       <div class="container mx-auto px-4">
         <div class="flex space-x-1 overflow-x-auto">
@@ -46,7 +43,13 @@
             class="tab-btn px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-gray-500 hover:text-gray-700"
             data-tab="registro"
           >
-            <i class="fas fa-plus mr-2"></i>Registro
+            <i class="fas fa-plus mr-2"></i>Agregar Registro
+          </button>
+          <button
+            class="tab-btn px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-gray-500 hover:text-gray-700"
+            data-tab="insumos"
+          >
+            <i class="fas fa-warehouse mr-2"></i>Agregar Insumos
           </button>
           <button
             class="tab-btn px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-gray-500 hover:text-gray-700"
@@ -63,11 +66,9 @@
         </div>
       </div>
     </nav>
-    <!-- Main Content -->
+
     <main class="container mx-auto px-4 py-6">
-      <!-- Dashboard Tab -->
       <div id="dashboard" class="tab-content">
-        <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div class="bg-white rounded-lg shadow p-6">
             <div class="flex items-center">
@@ -134,7 +135,6 @@
             </div>
           </div>
         </div>
-        <!-- Charts -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <div class="bg-white rounded-lg shadow p-6">
             <h3 class="text-lg font-semibold mb-4">Consumo por Categoría</h3>
@@ -149,7 +149,6 @@
             </div>
           </div>
         </div>
-        <!-- Recent Records Table -->
         <div class="bg-white rounded-lg shadow">
           <div class="px-6 py-4 border-b border-gray-200">
             <div
@@ -210,14 +209,11 @@
               <tbody
                 id="registrosTableBody"
                 class="bg-white divide-y divide-gray-200"
-              >
-                <!-- Data will be populated here -->
-              </tbody>
+              ></tbody>
             </table>
           </div>
         </div>
       </div>
-      <!-- Registro Tab -->
       <div id="registro" class="tab-content hidden">
         <div class="max-w-4xl mx-auto">
           <div class="bg-white rounded-lg shadow-lg p-6">
@@ -226,7 +222,6 @@
               Registro de Materiales de Cuadrillas Integrales
             </h2>
             <form id="materialForm" class="space-y-6">
-              <!-- Código y Fecha -->
               <div
                 class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg"
               >
@@ -254,7 +249,7 @@
                   />
                 </div>
               </div>
-              <!-- Acopladores -->
+
               <div class="p-4 border-2 border-blue-200 rounded-lg">
                 <h3 class="text-lg font-semibold text-blue-700 mb-3">
                   ACOPLADORES
@@ -284,7 +279,7 @@
                   </div>
                 </div>
               </div>
-              <!-- Conectores -->
+
               <div class="p-4 border-2 border-green-200 rounded-lg">
                 <h3 class="text-lg font-semibold text-green-700 mb-3">
                   CONECTORES
@@ -314,7 +309,7 @@
                   </div>
                 </div>
               </div>
-              <!-- Divisores -->
+
               <div class="p-4 border-2 border-purple-200 rounded-lg">
                 <h3 class="text-lg font-semibold text-purple-700 mb-3">
                   DIVISORES
@@ -344,7 +339,7 @@
                   </div>
                 </div>
               </div>
-              <!-- Fibra -->
+
               <div class="p-4 border-2 border-yellow-200 rounded-lg">
                 <h3 class="text-lg font-semibold text-yellow-700 mb-3">
                   FIBRA
@@ -361,7 +356,7 @@
                   />
                 </div>
               </div>
-              <!-- Otros -->
+
               <div class="p-4 border-2 border-red-200 rounded-lg">
                 <h3 class="text-lg font-semibold text-red-700 mb-3">
                   GRAPAS, MANGUITOS Y ONU
@@ -402,7 +397,7 @@
                   </div>
                 </div>
               </div>
-              <!-- Patch Cord -->
+
               <div class="p-4 border-2 border-indigo-200 rounded-lg">
                 <h3 class="text-lg font-semibold text-indigo-700 mb-3">
                   PATCH CORD
@@ -443,7 +438,7 @@
                   </div>
                 </div>
               </div>
-              <!-- Rosetas -->
+
               <div class="p-4 border-2 border-pink-200 rounded-lg">
                 <h3 class="text-lg font-semibold text-pink-700 mb-3">
                   ROSETAS
@@ -462,7 +457,7 @@
                   </div>
                 </div>
               </div>
-              <!-- Servilletas y Cinta D.F. -->
+
               <div class="p-4 border-2 border-teal-200 rounded-lg">
                 <h3 class="text-lg font-semibold text-teal-700 mb-3">
                   SERVILLETAS Y CINTA D.F
@@ -492,7 +487,7 @@
                   </div>
                 </div>
               </div>
-              <!-- Teipe y Tirro -->
+
               <div class="p-4 border-2 border-orange-200 rounded-lg">
                 <h3 class="text-lg font-semibold text-orange-700 mb-3">
                   TEIPE Y TIRRO
@@ -522,7 +517,7 @@
                   </div>
                 </div>
               </div>
-              <!-- Tirrajes -->
+
               <div class="p-4 border-2 border-gray-300 rounded-lg">
                 <h3 class="text-lg font-semibold text-gray-700 mb-3">
                   TIRRAJES
@@ -563,7 +558,7 @@
                   </div>
                 </div>
               </div>
-              <!-- Botones -->
+
               <div class="flex justify-center space-x-4 pt-6">
                 <button
                   type="submit"
@@ -583,13 +578,13 @@
           </div>
         </div>
       </div>
-      <!-- Reportes Tab -->
+
       <div id="reportes" class="tab-content hidden">
         <div class="bg-white rounded-lg shadow p-6">
           <h2 class="text-2xl font-bold mb-6">
             <i class="fas fa-chart-bar mr-2"></i>Reportes y Análisis
           </h2>
-          <!-- Date Range Filter -->
+
           <div class="mb-6 p-4 bg-gray-50 rounded-lg">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
@@ -622,7 +617,7 @@
               </div>
             </div>
           </div>
-          <!-- Report Charts -->
+
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="bg-gray-50 p-4 rounded-lg">
               <h3 class="text-lg font-semibold mb-4">
@@ -639,7 +634,7 @@
               </div>
             </div>
           </div>
-          <!-- Export Options -->
+
           <div class="mt-6 flex flex-wrap gap-4">
             <button
               id="exportPDF"
@@ -656,7 +651,7 @@
           </div>
         </div>
       </div>
-      <!-- Importar Tab -->
+
       <div id="importar" class="tab-content hidden">
         <div class="bg-white rounded-lg shadow p-6">
           <h2 class="text-2xl font-bold mb-6">
@@ -689,7 +684,7 @@
                 <i class="fas fa-cogs mr-2"></i>Procesar Importación
               </button>
             </div>
-            <!-- Sample Data Preview -->
+
             <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <h4 class="font-semibold text-yellow-800 mb-2">
                 <i class="fas fa-info-circle mr-2"></i>Ejemplo de datos
@@ -703,12 +698,63 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
           </div>
         </div>
       </div>
+      <div id="insumos" class="tab-content hidden">
+        <div class="bg-white rounded-lg shadow p-6 max-w-4xl mx-auto">
+          <h2 class="text-2xl font-bold mb-6 text-blue-700 flex items-center">
+            <i class="fas fa-warehouse mr-2"></i>Agregar Insumos Semanales
+          </h2>
+          <form id="insumosForm" class="space-y-4 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div id="insumosInputs" class="w-full"></div>
+            </div>
+            <div class="flex justify-center pt-4">
+              <button
+                type="submit"
+                class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg transition duration-200"
+              >
+                <i class="fas fa-plus mr-2"></i>Agregar Insumos
+              </button>
+            </div>
+          </form>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 class="text-lg font-semibold mb-2 text-gray-700">
+                Resumen Semanal
+              </h3>
+              <table class="min-w-full divide-y divide-gray-200 text-sm">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-4 py-2 text-left font-medium text-gray-500">
+                      Material
+                    </th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-500">
+                      Disponibles
+                    </th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-500">
+                      Gastados
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  id="insumosResumenBody"
+                  class="bg-white divide-y divide-gray-200"
+                ></tbody>
+              </table>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold mb-2 text-gray-700">
+                Gráfico Semanal
+              </h3>
+              <canvas id="insumosChart" style="height: 300px"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
-    <!-- Success/Error Messages -->
+
     <div id="messageContainer" class="fixed top-4 right-4 z-50"></div>
 
     <script>
-      // 🔥 CONFIGURACIÓN DE FIREBASE (AUTOMÁTICA)
       const firebaseConfig = {
         apiKey: "AIzaSyCQD8cR0CDAEXKvcQLHFocUVjMDLsTfvP0",
         authDomain: "control-de-materiales-aa944.firebaseapp.com",
@@ -718,29 +764,26 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
         appId: "1:351278560249:web:cb480b35a1919fa1ca0328",
       };
 
-      // Inicializar Firebase
       firebase.initializeApp(firebaseConfig);
       const db = firebase.firestore();
       const materialesCollection = db.collection("materiales");
+      const insumosCollection = db.collection("insumos");
 
-      // Global variables
       let materialesData = [];
       let categoryChart = null;
       let trendChart = null;
       let reportCategoryChart = null;
       let reportTimeChart = null;
-      let editingId = null; // Para manejar edición sin borrar
+      let editingId = null;
 
-      // Initialize application
       document.addEventListener("DOMContentLoaded", function () {
         initializeTabs();
-        //initializeTheme();
+
         setTodayDate();
-        loadMaterials(); // Cargar desde Firestore
+        loadMaterials();
         updateDashboard();
         initializeCharts();
 
-        // Event listeners
         document
           .getElementById("materialForm")
           .addEventListener("submit", handleFormSubmit);
@@ -767,7 +810,31 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
           .addEventListener("input", filterData);
       });
 
-      // Tab functionality
+      const materialesInsumos = [
+        "ACOPLADOR APC",
+        "ACOPLADOR UPC",
+        "CONECTOR APC",
+        "CONECTOR UPC",
+        "DIVISOR 1 X 16",
+        "DIVISOR 1 X 8",
+        "FIBRA DROP 1F",
+        "GRAPAS",
+        "M.TERMICO",
+        "ONU GPON",
+        "PATCH UPC-UPC",
+        "PC-3M-SC-UPC",
+        "PATCH APC-APC",
+        "ROSETA",
+        "SERVILLETAS",
+        "CINTA D.F",
+        "TEIPE",
+        "TIRRO",
+        "TIRRAJE Grande",
+        "TIRRAJE Mediano",
+        "TIRRAJE Pequeño",
+      ];
+      let insumosChart = null;
+
       function initializeTabs() {
         const tabButtons = document.querySelectorAll(".tab-btn");
         const tabContents = document.querySelectorAll(".tab-content");
@@ -785,7 +852,6 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
         });
       }
 
-      // Theme functionality
       function initializeTheme() {
         const themeToggle = document.getElementById("themeToggle");
         themeToggle.addEventListener("click", () => {
@@ -796,7 +862,6 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
         });
       }
 
-      // Set today's date
       function setTodayDate() {
         const today = new Date().toISOString().split("T")[0];
         document.getElementById("fecha").value = today;
@@ -806,6 +871,204 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
         document.getElementById("reportStartDate").value = thirtyDaysAgo
           .toISOString()
           .split("T")[0];
+      }
+
+      function renderInsumosInputs() {
+        const container = document.getElementById("insumosInputs");
+        if (!container) return;
+        container.innerHTML = materialesInsumos
+          .map(
+            (mat) => `
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">${mat}</label>
+        <input type="number" min="0" id="insumo_${mat.replace(
+          /[^a-zA-Z0-9]/g,
+          "_"
+        )}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value="0"/>
+      </div>
+    `
+          )
+          .join("");
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        document
+          .getElementById("insumosForm")
+          ?.addEventListener("submit", handleInsumosSubmit);
+        renderInsumosInputs();
+        loadInsumosResumen();
+      });
+
+      function handleInsumosSubmit(e) {
+        e.preventDefault();
+        const semana = getCurrentWeek();
+        const insumos = { semana };
+        materialesInsumos.forEach((mat) => {
+          const key = mat.replace(/[^a-zA-Z0-9]/g, "_");
+          insumos[key] =
+            parseInt(document.getElementById("insumo_" + key).value) || 0;
+        });
+        insumosCollection
+          .doc(semana)
+          .set(insumos)
+          .then(() => {
+            showMessage("Insumos agregados para la semana", "success");
+            loadInsumosResumen();
+          })
+          .catch((err) =>
+            showMessage("Error al guardar insumos: " + err.message, "error")
+          );
+      }
+      function getCurrentWeek() {
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), 0, 1);
+        const days = Math.floor((now - firstDay) / (24 * 60 * 60 * 1000));
+        const week = Math.ceil((days + firstDay.getDay() + 1) / 7);
+        return `${now.getFullYear()}-S${week}`;
+      }
+
+      function loadInsumosResumen() {
+        const semana = getCurrentWeek();
+        insumosCollection
+          .doc(semana)
+          .get()
+          .then((doc) => {
+            const insumos = doc.exists ? doc.data() : {};
+
+            const semanaStart = getMondayOfCurrentWeek();
+            const semanaEnd = new Date(semanaStart);
+            semanaEnd.setDate(semanaEnd.getDate() + 6);
+            const semanaStartStr = semanaStart.toISOString().split("T")[0];
+            const semanaEndStr = semanaEnd.toISOString().split("T")[0];
+            const consumidos = {};
+            materialesInsumos.forEach((mat) => (consumidos[mat] = 0));
+            materialesData.forEach((item) => {
+              if (item.fecha >= semanaStartStr && item.fecha <= semanaEndStr) {
+                materialesInsumos.forEach((mat) => {
+                  let key = "";
+                  switch (mat) {
+                    case "ACOPLADOR APC":
+                      key = "acopladorAPC";
+                      break;
+                    case "ACOPLADOR UPC":
+                      key = "acopladorUPC";
+                      break;
+                    case "CONECTOR APC":
+                      key = "conectorAPC";
+                      break;
+                    case "CONECTOR UPC":
+                      key = "conectorUPC";
+                      break;
+                    case "DIVISOR 1 X 16":
+                      key = "divisor1x16";
+                      break;
+                    case "DIVISOR 1 X 8":
+                      key = "divisor1x8";
+                      break;
+                    case "FIBRA DROP 1F":
+                      key = "fibraDrop1F";
+                      break;
+                    case "GRAPAS":
+                      key = "grapas";
+                      break;
+                    case "M.TERMICO":
+                      key = "termos";
+                      break;
+                    case "ONU GPON":
+                      key = "onu";
+                      break;
+                    case "PATCH UPC-UPC":
+                      key = "ptcAA";
+                      break;
+                    case "PC-3M-SC-UPC":
+                      key = "ptcVA";
+                      break;
+                    case "PATCH APC-APC":
+                      key = "ptcAPC";
+                      break;
+                    case "ROSETA":
+                      key = "roseta";
+                      break;
+                    case "SERVILLETAS":
+                      key = "servilletas";
+                      break;
+                    case "CINTA D.F":
+                      key = "cintaDobleFace";
+                      break;
+                    case "TEIPE":
+                      key = "teipe";
+                      break;
+                    case "TIRRO":
+                      key = "tirro";
+                      break;
+                    case "TIRRAJE Grande":
+                      key = "tirrapG";
+                      break;
+                    case "TIRRAJE Mediano":
+                      key = "tirrapM";
+                      break;
+                    case "TIRRAJE Pequeño":
+                      key = "tirrapP";
+                      break;
+                  }
+                  consumidos[mat] += item[key] || 0;
+                });
+              }
+            });
+
+            const tbody = document.getElementById("insumosResumenBody");
+            tbody.innerHTML = "";
+
+            tbody.innerHTML = materialesInsumos
+              .map((mat) => {
+                const key = mat.replace(/[^a-zA-Z0-9]/g, "_");
+                return `<tr>
+      <td class="px-4 py-2">${mat}</td>
+      <td class="px-4 py-2">${insumos[key] || 0}</td>
+      <td class="px-4 py-2">${consumidos[mat]}</td>
+    </tr>`;
+              })
+              .join("");
+            renderInsumosChart(materialesInsumos, insumos, consumidos);
+          });
+      }
+
+      function renderInsumosChart(materiales, insumos, consumidos) {
+        const ctx = document.getElementById("insumosChart").getContext("2d");
+        if (insumosChart) insumosChart.destroy();
+        insumosChart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: materiales,
+            datasets: [
+              {
+                label: "Disponibles",
+                data: materiales.map(
+                  (mat) => insumos[mat.replace(/[^a-zA-Z0-9]/g, "_")] || 0
+                ),
+                backgroundColor: "#3B82F6",
+              },
+              {
+                label: "Gastados",
+                data: materiales.map((mat) => consumidos[mat] || 0),
+                backgroundColor: "#EF4444",
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: "top" } },
+            scales: { y: { beginAtZero: true } },
+          },
+        });
+      }
+      function getMondayOfCurrentWeek() {
+        const now = new Date();
+        const day = now.getDay() || 7;
+        now.setHours(0, 0, 0, 0);
+        if (day !== 1) now.setDate(now.getDate() - (day - 1));
+        return now;
       }
 
       function loadMaterials() {
@@ -825,7 +1088,6 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
         );
       }
 
-      // Update dashboard statistics
       function updateDashboard() {
         const today = new Date().toISOString().split("T")[0];
         const thisWeekStart = new Date();
@@ -853,7 +1115,6 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
         updateTable();
       }
 
-      // Update table with filtered data
       function updateTable() {
         const tbody = document.getElementById("registrosTableBody");
         const filterDate = document.getElementById("filterDate").value;
@@ -873,7 +1134,6 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
           );
         }
 
-        // Ordenar por fecha descendente (más reciente primero)
         filteredData = filteredData.sort((a, b) => {
           if (a.fecha > b.fecha) return -1;
           if (a.fecha < b.fecha) return 1;
@@ -917,7 +1177,6 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
           .join("");
       }
 
-      // Initialize charts
       function initializeCharts() {
         const categoryCtx = document
           .getElementById("categoryChart")
@@ -980,7 +1239,6 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
         });
       }
 
-      // Calculate category totals
       function calculateCategoryTotals() {
         const totals = {
           Acopladores: 0,
@@ -1014,7 +1272,7 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
         });
         return totals;
       }
-      // Calculate trend data
+
       function calculateTrendData() {
         const dateGroups = {};
         materialesData.forEach((item) => {
@@ -1025,7 +1283,6 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
         return { labels: sortedDates, values: values };
       }
 
-      // Form handling
       function handleFormSubmit(e) {
         e.preventDefault();
         const newRecord = {
@@ -1066,7 +1323,6 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
         };
 
         if (editingId) {
-          // Actualizar: Usar el ID real del documento
           materialesCollection
             .doc(editingId)
             .set(newRecord)
@@ -1081,11 +1337,9 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
               showMessage("Error al actualizar: " + error.message, "error");
             });
         } else {
-          // Nuevo: Dejar que Firestore genere el ID, y luego guardarlo en el documento
           materialesCollection
             .add(newRecord)
             .then((docRef) => {
-              // Actualizar el documento con su propio ID
               return docRef.update({ id: docRef.id });
             })
             .then(() => {
@@ -1100,20 +1354,17 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
         }
       }
 
-      // Clear form and return to dashboard
       function clearFormAndReturn() {
         clearForm();
         document.querySelector('[data-tab="dashboard"]').click();
       }
 
-      // Clear form
       function clearForm() {
         document.getElementById("materialForm").reset();
         setTodayDate();
         editingId = null;
       }
 
-      // Update charts
       function updateCharts() {
         if (categoryChart) {
           const categoryData = calculateCategoryTotals();
@@ -1129,12 +1380,10 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
         }
       }
 
-      // Filter data
       function filterData() {
         updateTable();
       }
 
-      // Edit record
       function editRecord(id) {
         const record = materialesData.find((item) => item.id === id);
         if (record) {
@@ -1147,9 +1396,8 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
         }
       }
 
-      // Delete record
       function deleteRecord(id) {
-        console.log("ID a eliminar:", id); // 🔍 Agrega esta línea para depurar
+        console.log("ID a eliminar:", id);
         if (confirm("¿Estás seguro de que quieres eliminar este registro?")) {
           materialesCollection
             .doc(id)
@@ -1164,7 +1412,6 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
         }
       }
 
-      // Import data
       function processImport() {
         const importData = document.getElementById("importData").value;
         if (!importData.trim()) {
@@ -1211,7 +1458,6 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
         }, 1000);
       }
 
-      // Format date from DD/MM/YYYY to YYYY-MM-DD
       function formatDate(dateStr) {
         const parts = dateStr.split("/");
         return parts.length === 3
@@ -1219,7 +1465,6 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
           : new Date().toISOString().split("T")[0];
       }
 
-      // Generate report
       function generateReport() {
         const startDate = document.getElementById("reportStartDate").value;
         const endDate = document.getElementById("reportEndDate").value;
@@ -1234,7 +1479,6 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
         showMessage("Reporte generado", "success");
       }
 
-      // Update report charts
       function updateReportCharts(data) {
         const categoryTotals = calculateCategoryTotalsForData(data);
         if (reportCategoryChart) reportCategoryChart.destroy();
@@ -1289,7 +1533,6 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
         });
       }
 
-      // Calculate category totals for specific data
       function calculateCategoryTotalsForData(data) {
         const totals = {
           Acopladores: 0,
@@ -1325,7 +1568,6 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
         return totals;
       }
 
-      // Calculate time data for specific data
       function calculateTimeDataForData(data) {
         const dateGroups = {};
         data.forEach((item) => {
@@ -1336,22 +1578,18 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
         return { labels: sortedDates, values: values };
       }
 
-      // Export to PDF
       function exportToPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
-        // Título
         doc.setFontSize(20);
         doc.text("Reporte de Materiales ThunderNet", 20, 20);
         doc.setFontSize(12);
         doc.text("Fecha: " + new Date().toLocaleDateString(), 20, 30);
 
-        // Obtener códigos únicos
         const codigoSet = new Set(materialesData.map((item) => item.codigo));
         const codigos = Array.from(codigoSet).sort();
 
-        // Definir materiales
         const materiales = [
           "ACOPLADOR APC",
           "ACOPLADOR UPC",
@@ -1376,24 +1614,20 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
           "TIRRAJE Pequeño",
         ];
 
-        // Coordenadas iniciales
         let startY = 40;
         const marginX = 20;
-        const cellWidth = 30; // 🔥 Aumentado de 20 a 30 para evitar superposición
-        const cellHeight = 10; // Más alto para mejor lectura
-        const fontSize = 9; // Fuente más pequeña para caber mejor
+        const cellWidth = 30;
+        const cellHeight = 10;
+        const fontSize = 9;
 
-        // Configurar fuente
         doc.setFontSize(fontSize);
 
-        // Encabezados de tabla
         doc.text("Materiales", marginX, startY);
         codigos.forEach((codigo, index) => {
           const x = marginX + (index + 1) * cellWidth;
           doc.text(codigo, x, startY);
         });
 
-        // Dibujar línea horizontal debajo del encabezado
         const lineY = startY + cellHeight;
         doc.setLineWidth(0.1);
         doc.line(
@@ -1403,7 +1637,6 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
           lineY
         );
 
-        // Llenar datos
         materiales.forEach((material, i) => {
           const y = startY + (i + 1) * cellHeight;
           doc.text(material, marginX, y);
@@ -1455,7 +1688,6 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
           });
         });
 
-        // Ajustar páginas si es necesario
         const totalPages = Math.ceil(
           ((materiales.length + 1) * cellHeight) /
             (doc.internal.pageSize.height - 20)
@@ -1477,12 +1709,10 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
           );
         }
 
-        // Guardar archivo
         doc.save("reporte_materiales_thundernet.pdf");
         showMessage("PDF exportado", "success");
       }
 
-      // Export to CSV
       function exportToCSV() {
         const headers = [
           "Código",
@@ -1549,7 +1779,6 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
         showMessage("CSV exportado", "success");
       }
 
-      // Show message
       function showMessage(message, type) {
         const container = document.getElementById("messageContainer");
         const msg = document.createElement("div");
