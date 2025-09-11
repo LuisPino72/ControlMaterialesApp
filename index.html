@@ -828,7 +828,6 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
         "TIRRAJE Pequeño",
       ];
       let insumosChart = null;
-      
 
       function initializeTabs() {
         const tabButtons = document.querySelectorAll(".tab-btn");
@@ -897,18 +896,34 @@ AC01,3,0,5,0,0,0,126,18,4,3,0,3,3,3,0,0,0,6,8,0,0,28/07/2025</pre
       function handleInsumosSubmit(e) {
         e.preventDefault();
         const semana = getCurrentWeek();
-        const insumos = { semana };
-        materialesInsumos.forEach((mat) => {
-          const key = mat.replace(/[^a-zA-Z0-9]/g, "_");
-          insumos[key] =
-            parseInt(document.getElementById("insumo_" + key).value) || 0;
-        });
+
         insumosCollection
           .doc(semana)
-          .set(insumos)
+          .get()
+          .then((docSnapshot) => {
+            const insumosActuales = docSnapshot.exists
+              ? docSnapshot.data()
+              : { semana };
+
+            const insumosActualizados = { ...insumosActuales };
+
+            materialesInsumos.forEach((mat) => {
+              const key = mat.replace(/[^a-zA-Z0-9]/g, "_");
+              const valorNuevo =
+                parseInt(document.getElementById("insumo_" + key).value) || 0;
+              const valorActual = insumosActuales[key] || 0;
+              insumosActualizados[key] = valorActual + valorNuevo;
+            });
+
+            return insumosCollection.doc(semana).set(insumosActualizados);
+          })
           .then(() => {
-            showMessage("Insumos agregados para la semana", "success");
+            showMessage(
+              "Insumos agregados y sumados al total de la semana",
+              "success"
+            );
             loadInsumosResumen();
+            document.getElementById("insumosForm").reset();
           })
           .catch((err) =>
             showMessage("Error al guardar insumos: " + err.message, "error")
